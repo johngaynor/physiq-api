@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const apiKeyMiddleware = require("./middleware/apiKey");
+const { mysqlPromise } = require("./config/database");
 
 dotenv.config();
 
@@ -15,6 +16,16 @@ app.use("/api", apiKeyMiddleware);
 
 app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello from protected route!" });
+});
+
+app.get("/api/logs", async (req, res) => {
+  try {
+    const pool = await mysqlPromise;
+    const [result] = await pool.query("select * from weightLogs");
+    res.status(200).json({ result });
+  } catch (error) {
+    res.status(400).json({ message: "failed" });
+  }
 });
 
 app.listen(PORT, () => {

@@ -2,7 +2,7 @@ require("dotenv").config();
 
 function apiKeyMiddleware(req, res, next) {
   const userKey = req.header("x-api-key");
-  const apiKey = process.env.API_KEY;
+  const apiKey = process.env.TEST_API_KEY;
 
   console.log("Received API Key:", userKey);
   console.log("Expected API Key:", apiKey);
