@@ -21,6 +21,7 @@ app.get("/api/hello", (req, res) => {
 app.get("/api/logs", async (req, res) => {
   try {
     const pool = await mysqlPromise;
+    console.log({ userId: process.env.USER_ID });
     const [result] = await pool.query(
       "select log.* from weightLogs log left join apiUsers api on api.id = log.userId where api.clerkId = ?",
       [process.env.USER_ID]
