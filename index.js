@@ -21,7 +21,10 @@ app.get("/api/hello", (req, res) => {
 app.get("/api/logs", async (req, res) => {
   try {
     const pool = await mysqlPromise;
-    const [result] = await pool.query("select * from weightLogs");
+    const [result] = await pool.query(
+      "select log.* from weightLogs log left join apiUsers api on api.id = log.userId where api.clerkId = ?",
+      [process.env.USER_ID]
+    );
     res.status(200).json({ result });
   } catch (error) {
     res.status(400).json({ message: "failed" });
