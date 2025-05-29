@@ -1,11 +1,8 @@
 require("dotenv").config();
 
-function apiKeyMiddleware(req, res, next) {
+function auth(req, res, next) {
   const userKey = req.header("x-api-key");
   const apiKey = process.env.TEST_API_KEY;
-
-  console.log("Received API Key:", userKey);
-  console.log("Expected API Key:", apiKey);
 
   if (!userKey || userKey !== apiKey) {
     return res.status(401).json({
@@ -16,4 +13,4 @@ function apiKeyMiddleware(req, res, next) {
   next();
 }
 
-module.exports = apiKeyMiddleware;
+module.exports = auth;
