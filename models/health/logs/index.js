@@ -32,6 +32,7 @@ const logFunctions = {
       }
     });
   },
+  // will need to check on this logic to make sure this kind of structure works in mysql
   async editDailyWeight(userId, values) {
     return new Promise(async function (resolve, reject) {
       try {
@@ -39,14 +40,20 @@ const logFunctions = {
         const pool = await mysqlPromise;
         await pool.query(
           `
-          update weightLogs
-          set weight = ?
-          where date = ?
-            and userId = (
-              select id from apiUsers where clerkId = ?
-            )
+          if exists (select 1 from weightLogs where date = ? and userId = (select id from apiUsers where clerkId = ?))
+            begin
+              update weightLogs
+              set weight = ?
+              where date = ?
+                and userId = (
+                  select id from apiUsers where clerkId = ?
+                )
+            end
+          else 
+            begin
+              insert into weightLogs (date, userId, weight) values (?, (select id from apiUsers where clerkId = ?), ?)
           `,
-          [weight, date, userId]
+          [date, userId, weight, date, userId, date, userId, weight]
         );
         resolve();
       } catch (error) {
@@ -61,15 +68,22 @@ const logFunctions = {
         const pool = await mysqlPromise;
         await pool.query(
           `
-          update weightLogs
-          set steps = ?
-          where date = ?
-            and userId = (
-              select id from apiUsers where clerkId = ?
-            )
+          if exists (select 1 from weightLogs where date = ? and userId = (select id from apiUsers where clerkId = ?))
+            begin
+              update weightLogs
+              set steps = ?
+              where date = ?
+                and userId = (
+                  select id from apiUsers where clerkId = ?
+                )
+            end
+          else 
+            begin
+              insert into weightLogs (date, userId, steps) values (?, (select id from apiUsers where clerkId = ?), ?)
           `,
-          [steps, date, userId]
+          [date, userId, steps, date, userId, date, userId, steps]
         );
+        resolve();
       } catch (error) {
         reject(error);
       }
@@ -90,17 +104,26 @@ const logFunctions = {
         const pool = await mysqlPromise;
         await pool.query(
           `
-          update sleepLogs
-          set totalBed = ?,
-            totalSleep = ?,
-            awakeQty = ?,
-            lightQty = ?,
-            remQty = ?,
-            deepQty = ?
-          where date = ?
-            and userId = (
-              select id from apiUsers where clerkId = ?
-            )
+          if exists (select 1 from sleepLogs where date = ? and userId = (select id from apiUsers where clerkId = ?))
+            begin
+              update sleepLogs
+              set totalBed = ?,
+                totalSleep = ?,
+                awakeQty = ?,
+                lightQty = ?,
+                remQty = ?,
+                deepQty = ?
+              where date = ?
+                and userId = (
+                  select id from apiUsers where clerkId = ?
+                )
+            end
+          else
+            begin
+              insert into sleepLogs 
+                (date, userId, totalBed, totalSleep, awakeQty, lightQty, remQty, deepQty)
+              values
+                (?, (select id from apiUsers where clerkId = ?), ?, ?, ?, ?, ?, ?)
           `,
           [
             totalBed,
@@ -111,6 +134,14 @@ const logFunctions = {
             deepQty,
             date,
             userId,
+            date,
+            userId,
+            totalBed,
+            totalSleep,
+            awakeQty,
+            lightQty,
+            remQty,
+            deepQty,
           ]
         );
         resolve();
