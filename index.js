@@ -18,7 +18,7 @@ app.use("/api", auth);
 require("./routes");
 
 // catchall for any remaining routes
-app.all("/api/*", (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ message: "Route does not exist" });
 });
 
