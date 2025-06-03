@@ -1,11 +1,10 @@
-const mysqlPromise = require("../../../config/database");
+const mysqlPool = require("../../../config/database");
 
 const logFunctions = {
   async getDailyLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const pool = await mysqlPromise;
-        const [result] = await pool.query(
+        const [result] = await mysqlPool.query(
           `
         select 
             log.date, 

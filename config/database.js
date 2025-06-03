@@ -1,17 +1,14 @@
 const mysql = require("mysql2/promise");
 const config = require("./index");
 
-const mysqlPromise = (async function () {
-  try {
-    const pool = await mysql.createPool(config.mySQLConfig);
+const mysqlPool = mysql.createPool(config.mySQLConfig);
 
-    console.log("Connected to MySQL Database");
+mysqlPool
+  .getConnection()
+  .then(() => console.log("Connected to MySQL Database"))
+  .catch((err) => {
+    console.error("MySQL Database Connection Failed! Bad Config: ", err);
+    process.exit(1);
+  });
 
-    return pool;
-  } catch (err) {
-    console.log("MySQL Database Connection Failed! Bad Config: ", err);
-    throw err;
-  }
-})();
-
-module.exports = { mysqlPromise };
+module.exports = mysqlPool;

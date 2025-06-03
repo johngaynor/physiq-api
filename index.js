@@ -1,21 +1,34 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const auth = require("./config/auth");
+const clerkAuth = require("./config/clerkAuth");
+const cors = require("cors");
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "PUBLIC ROUTE" });
-});
+app.use(
+  cors({
+    origin: "http://localhost:3001", // frontend in dev
+    credentials: true,
+  })
+);
 
 // authentication middleware
-app.use("/api", auth);
+app.use("/api", clerkAuth);
+
+app.use((req, res, next) => {
+  console.log(
+    `[${new Date().toISOString()}][${req.auth?.userId || "anonymous"}] ${
+      req.method
+    } ${req.originalUrl}`
+  );
+  next();
+});
 
 // import all defined api routes
-require("./routes");
+require("./routes")(app);
 
 // catchall for any remaining routes
 app.use((req, res) => {

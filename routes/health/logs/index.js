@@ -3,7 +3,7 @@ const logFunctions = require("../../../models/health/logs");
 
 router.get("/daily", async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.auth.userId;
     const result = await logFunctions.getDailyLogs(userId);
     res.status(200).json(result);
   } catch (error) {
