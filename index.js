@@ -8,9 +8,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const allowedOrigins = {
+  production: "https://physiq.app",
+  development: "http://localhost:3001",
+};
+
 app.use(
   cors({
-    origin: "http://localhost:3001", // frontend in dev
+    origin: allowedOrigins[process.env.NODE_ENV],
     credentials: true,
   })
 );
