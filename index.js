@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const allowedOrigins = {
-  production: "https://physiq.app",
+  production: "https://www.physiq.app",
   development: "http://localhost:3001",
 };
 
