@@ -8,17 +8,24 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = {
-  production: "https://www.physiq.app",
-  development: "http://localhost:3001",
-};
-
 app.use(
   cors({
-    origin: allowedOrigins[process.env.NODE_ENV],
+    origin: true, // Reflect request origin
     credentials: true,
   })
 );
+
+// const allowedOrigins = {
+//   production: "https://www.physiq.app",
+//   development: "http://localhost:3001",
+// };
+
+// app.use(
+//   cors({
+//     origin: allowedOrigins[process.env.NODE_ENV],
+//     credentials: true,
+//   })
+// );
 
 // authentication middleware
 app.use("/api", clerkAuth);
