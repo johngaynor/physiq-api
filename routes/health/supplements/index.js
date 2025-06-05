@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
 
 router.get("/logs", async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.auth.userId;
     const result = await supplementFunctions.getSupplementLogs(userId);
     res.status(200).json(result);
   } catch (error) {
