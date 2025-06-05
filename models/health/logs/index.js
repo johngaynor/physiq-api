@@ -6,9 +6,9 @@ const logFunctions = {
       try {
         const [result] = await mysqlPool.query(
           `
-        select 
-            log.date, 
-            log.weight,
+        SELECT 
+            log.date,
+            CAST(log.weight AS DOUBLE) AS weight,
             log.steps,
             slp.totalSleep,
             slp.totalBed,
@@ -16,14 +16,32 @@ const logFunctions = {
             slp.lightQty,
             slp.deepQty,
             slp.remQty
-        from weightLogs log 
-        left join apiUsers api 
-            on api.id = log.userId 
-        left join sleepLogs slp
-          on slp.date = log.date and slp.userId = log.userId
-        where api.clerkId = ?
+        FROM weightLogs log
+        LEFT JOIN sleepLogs slp 
+            ON slp.date = log.date AND slp.userId = log.userId
+        LEFT JOIN apiUsers api 
+            ON api.id = log.userId
+        WHERE api.clerkId = ?
+        UNION
+        SELECT 
+            slp.date,
+            CAST(log.weight AS DOUBLE) AS weight,
+            log.steps,
+            slp.totalSleep,
+            slp.totalBed,
+            slp.awakeQty,
+            slp.lightQty,
+            slp.deepQty,
+            slp.remQty
+        FROM sleepLogs slp
+        LEFT JOIN weightLogs log 
+            ON log.date = slp.date AND log.userId = slp.userId
+        LEFT JOIN apiUsers api 
+            ON api.id = slp.userId
+        WHERE api.clerkId = ?
+          AND log.date IS NULL
         `,
-          [userId]
+          [userId, userId]
         );
         resolve(result);
       } catch (error) {
@@ -31,28 +49,17 @@ const logFunctions = {
       }
     });
   },
-  // will need to check on this logic to make sure this kind of structure works in mysql
   async editDailyWeight(userId, values) {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, weight } = values;
-        const pool = await mysqlPromise;
-        await pool.query(
+        await mysqlPool.query(
           `
-          if exists (select 1 from weightLogs where date = ? and userId = (select id from apiUsers where clerkId = ?))
-            begin
-              update weightLogs
-              set weight = ?
-              where date = ?
-                and userId = (
-                  select id from apiUsers where clerkId = ?
-                )
-            end
-          else 
-            begin
-              insert into weightLogs (date, userId, weight) values (?, (select id from apiUsers where clerkId = ?), ?)
-          `,
-          [date, userId, weight, date, userId, date, userId, weight]
+          INSERT INTO weightLogs (date, userId, weight)
+          VALUES (?, (select id from apiUsers where clerkId = ?), ?)
+          ON DUPLICATE KEY UPDATE weight = VALUES(weight)
+        `,
+          [date, userId, weight]
         );
         resolve();
       } catch (error) {
@@ -64,84 +71,13 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, steps } = values;
-        const pool = await mysqlPromise;
-        await pool.query(
+        await mysqlPool.query(
           `
-          if exists (select 1 from weightLogs where date = ? and userId = (select id from apiUsers where clerkId = ?))
-            begin
-              update weightLogs
-              set steps = ?
-              where date = ?
-                and userId = (
-                  select id from apiUsers where clerkId = ?
-                )
-            end
-          else 
-            begin
-              insert into weightLogs (date, userId, steps) values (?, (select id from apiUsers where clerkId = ?), ?)
-          `,
-          [date, userId, steps, date, userId, date, userId, steps]
-        );
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-  async editDailySleep(userId, values) {
-    return new Promise(async function (resolve, reject) {
-      try {
-        const {
-          date,
-          totalBed,
-          totalSleep,
-          awakeQty,
-          lightQty,
-          deepQty,
-          remQty,
-        } = values;
-        const pool = await mysqlPromise;
-        await pool.query(
-          `
-          if exists (select 1 from sleepLogs where date = ? and userId = (select id from apiUsers where clerkId = ?))
-            begin
-              update sleepLogs
-              set totalBed = ?,
-                totalSleep = ?,
-                awakeQty = ?,
-                lightQty = ?,
-                remQty = ?,
-                deepQty = ?
-              where date = ?
-                and userId = (
-                  select id from apiUsers where clerkId = ?
-                )
-            end
-          else
-            begin
-              insert into sleepLogs 
-                (date, userId, totalBed, totalSleep, awakeQty, lightQty, remQty, deepQty)
-              values
-                (?, (select id from apiUsers where clerkId = ?), ?, ?, ?, ?, ?, ?)
-          `,
-          [
-            totalBed,
-            totalSleep,
-            awakeQty,
-            lightQty,
-            remQty,
-            deepQty,
-            date,
-            userId,
-            date,
-            userId,
-            totalBed,
-            totalSleep,
-            awakeQty,
-            lightQty,
-            remQty,
-            deepQty,
-          ]
+          INSERT INTO weightLogs (date, userId, steps)
+          VALUES (?, (select id from apiUsers where clerkId = ?), ?)
+          ON DUPLICATE KEY UPDATE steps = VALUES(steps)
+        `,
+          [date, userId, steps]
         );
         resolve();
       } catch (error) {
