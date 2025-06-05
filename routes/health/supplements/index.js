@@ -17,6 +17,7 @@ router.get("/logs", async (req, res) => {
     const result = await supplementFunctions.getSupplementLogs(userId);
     res.status(200).json(result);
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error });
   }
 });
