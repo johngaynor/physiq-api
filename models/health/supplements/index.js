@@ -32,8 +32,7 @@ const supplementFunctions = {
             supplementId,
             date,
             completed,
-            reason,
-            time
+            reason
           FROM supplementLogs
           WHERE userId = (select id from apiUsers where clerkId = ?)
           `,
