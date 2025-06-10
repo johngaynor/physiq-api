@@ -63,4 +63,17 @@ router.post("/daily/water", async (req, res) => {
     res.status(400).json({ error });
   }
 });
+
+router.post("/daily/calories", async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { calories, date } = req.body;
+
+    await logFunctions.editDailyCalories(userId, { calories, date });
+    res.status(200).json("Success");
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error });
+  }
+});
 module.exports = router;
