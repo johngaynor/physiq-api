@@ -16,7 +16,8 @@ const logFunctions = {
             slp.lightQty,
             slp.deepQty,
             slp.remQty,
-            log.bodyfat
+            log.bodyfat,
+            log.water
         FROM weightLogs log
         LEFT JOIN sleepLogs slp 
             ON slp.date = log.date AND slp.userId = log.userId
@@ -34,7 +35,8 @@ const logFunctions = {
             slp.lightQty,
             slp.deepQty,
             slp.remQty,
-            log.bodyfat
+            log.bodyfat,
+            log.water
         FROM sleepLogs slp
         LEFT JOIN weightLogs log 
             ON log.date = slp.date AND log.userId = slp.userId
@@ -87,7 +89,6 @@ const logFunctions = {
       }
     });
   },
-  // test to make sure this works
   async editDailyBodyfat(userId, values) {
     return new Promise(async function (resolve, reject) {
       try {
@@ -99,6 +100,24 @@ const logFunctions = {
           ON DUPLICATE KEY UPDATE bodyfat = VALUES(bodyfat), bodyfatSource = 1
         `,
           [date, userId, bodyfat]
+        );
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async editDailyWater(userId, values) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const { date, water } = values;
+        await mysqlPool.query(
+          `
+          INSERT INTO weightLogs (date, userId, water)
+          VALUES (?, (select id from apiUsers where clerkId = ?), ?)
+          ON DUPLICATE KEY UPDATE water = VALUES(water)
+        `,
+          [date, userId, water]
         );
         resolve();
       } catch (error) {
