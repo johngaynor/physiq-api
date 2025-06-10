@@ -1,4 +1,6 @@
 const mysqlPool = require("../../../config/database");
+const config = require("../../../config");
+const axios = require("axios");
 
 const logFunctions = {
   async getDailyLogs(userId) {
@@ -142,6 +144,42 @@ const logFunctions = {
         resolve();
       } catch (error) {
         reject(error);
+      }
+    });
+  },
+  async getDailySleepOura(userId, date) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [existing] = await mysqlPool.query(
+          `
+          select * from sleepLogs where userId = (select id from apiUsers where clerkId = ?) and date = ?
+          `,
+          [userId, date]
+        );
+
+        if (!existing.length) {
+          // get correct userId
+          const [user] = await mysqlPool.query(
+            `select id from apiUsers where clerkId = ?`,
+            [userId]
+          );
+
+          const oldUserId = user[0].id;
+          const result = await axios.post(
+            "https://4apzgqqogvz2v5cduanzxtoyea0rupfx.lambda-url.us-east-2.on.aws/",
+            {
+              userId: oldUserId,
+              date: date,
+              lambdaKey: config.ouraIntegrationApiKey,
+            }
+          );
+
+          resolve(result.data);
+        } else resolve({});
+
+        resolve("success");
+      } catch (e) {
+        reject(e);
       }
     });
   },

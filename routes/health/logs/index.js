@@ -76,4 +76,16 @@ router.post("/daily/calories", async (req, res) => {
     res.status(400).json({ error });
   }
 });
+
+router.get("/daily/sleep/oura/:date", async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const date = req.params.date;
+    const result = await logFunctions.getDailySleepOura(userId, date);
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error });
+  }
+});
 module.exports = router;

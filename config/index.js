@@ -7,6 +7,7 @@ const config = {
     database: process.env.MYSQL_DATABASE,
     port: process.env.MYSQL_PORT,
   },
+  ouraIntegrationApiKey: process.env.OURA_INTEGRATION_API_KEY,
 };
 
 module.exports = config;
