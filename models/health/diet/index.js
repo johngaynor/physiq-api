@@ -1,7 +1,7 @@
 const mysqlPromise = require("../../../config/database");
 
 const dietFunctions = {
-  async getDietLogs(userId) {
+  async getLatestDiet(userId) {
     return new Promise(async function (resolve, reject) {
       try {
         const [result] = await mysqlPromise.query(
@@ -21,8 +21,30 @@ const dietFunctions = {
         from dietLogs
         where userId = (select id from apiUsers where clerkId = ?)
         order by effectiveDate desc
+        limit 1;
           `,
           [userId]
+        );
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async getLatestDietSupplements(logId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [result] = await mysqlPromise.query(
+          `
+          select
+            id,
+            supplementId,
+            dosage,
+            frequency
+        from dietLogsSupplements
+        where logId = ?
+          `,
+          [logId]
         );
         resolve(result);
       } catch (error) {

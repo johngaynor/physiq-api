@@ -1,10 +1,17 @@
 const router = require("express").Router();
 const dietFunctions = require("../../../models/health/diet");
 
-router.get("/", async (req, res) => {
+router.get("/log/latest", async (req, res) => {
   const userId = req.auth.userId;
-  const result = await dietFunctions.getDietLogs(userId);
-  res.status(200).json(result);
+  const logs = await dietFunctions.getLatestDiet(userId);
+
+  if (!logs.length) res.status(200).json({});
+
+  const log = logs[0];
+
+  const supplements = await dietFunctions.getLatestDietSupplements(log.id);
+
+  res.status(200).json({ log, supplements });
 });
 
 module.exports = router;
