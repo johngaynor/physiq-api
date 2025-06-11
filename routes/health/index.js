@@ -1,6 +1,7 @@
 const router = require("express").Router();
 
-router.use("/logs", require("./logs"));
+router.use("/daily", require("./daily"));
+router.use("/diet", require("./diet"));
 router.use("/supplements", require("./supplements"));
 
 module.exports = router;

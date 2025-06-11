@@ -1,13 +1,13 @@
 const router = require("express").Router();
-const logFunctions = require("../../../models/health/logs");
+const logFunctions = require("../../../models/health/daily");
 
-router.get("/daily", async (req, res) => {
+router.get("/", async (req, res) => {
   const userId = req.auth.userId;
   const result = await logFunctions.getDailyLogs(userId);
   res.status(200).json(result);
 });
 
-router.post("/daily/weight", async (req, res) => {
+router.post("/weight", async (req, res) => {
   const userId = req.auth.userId;
   const { weight, date } = req.body;
 
@@ -15,7 +15,7 @@ router.post("/daily/weight", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.post("/daily/steps", async (req, res) => {
+router.post("/steps", async (req, res) => {
   const userId = req.auth.userId;
   const { steps, date } = req.body;
 
@@ -23,7 +23,7 @@ router.post("/daily/steps", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.post("/daily/bodyfat", async (req, res) => {
+router.post("/bodyfat", async (req, res) => {
   const userId = req.auth.userId;
   const { bodyfat, date } = req.body;
 
@@ -31,7 +31,7 @@ router.post("/daily/bodyfat", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.post("/daily/water", async (req, res) => {
+router.post("/water", async (req, res) => {
   const userId = req.auth.userId;
   const { water, date } = req.body;
 
@@ -39,7 +39,7 @@ router.post("/daily/water", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.post("/daily/calories", async (req, res) => {
+router.post("/calories", async (req, res) => {
   const userId = req.auth.userId;
   const { calories, date } = req.body;
 
@@ -47,7 +47,7 @@ router.post("/daily/calories", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.get("/daily/sleep/oura/:date", async (req, res) => {
+router.get("/sleep/oura/:date", async (req, res) => {
   const userId = req.auth.userId;
   const date = req.params.date;
   const result = await logFunctions.getDailySleepOura(userId, date);
