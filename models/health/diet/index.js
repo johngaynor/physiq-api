@@ -43,6 +43,7 @@ const dietFunctions = {
             frequency
         from dietLogsSupplements
         where logId = ?
+        order by frequency desc
           `,
           [logId]
         );
