@@ -179,7 +179,7 @@ const logFunctions = {
 
         resolve("success");
       } catch (e) {
-        reject(e);
+        reject({ message: e.response?.data?.error || "Internal Server Error" });
       }
     });
   },

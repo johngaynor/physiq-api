@@ -41,6 +41,19 @@ app.use((req, res) => {
   res.status(404).json({ message: "Route does not exist" });
 });
 
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+
+  console.log(err);
+
+  // Serialize error for frontend
+  const serializedError = {
+    message: err.message || "Internal Server Error",
+  };
+
+  res.status(statusCode).json({ error: serializedError });
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on port: ${PORT}`);
 });

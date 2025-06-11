@@ -2,90 +2,55 @@ const router = require("express").Router();
 const logFunctions = require("../../../models/health/logs");
 
 router.get("/daily", async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const result = await logFunctions.getDailyLogs(userId);
-    res.status(200).json(result);
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error });
-  }
+  const userId = req.auth.userId;
+  const result = await logFunctions.getDailyLogs(userId);
+  res.status(200).json(result);
 });
 
 router.post("/daily/weight", async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { weight, date } = req.body;
+  const userId = req.auth.userId;
+  const { weight, date } = req.body;
 
-    await logFunctions.editDailyWeight(userId, { weight, date });
-    res.status(200).json("Success");
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error });
-  }
+  await logFunctions.editDailyWeight(userId, { weight, date });
+  res.status(200).json("Success");
 });
 
 router.post("/daily/steps", async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { steps, date } = req.body;
+  const userId = req.auth.userId;
+  const { steps, date } = req.body;
 
-    await logFunctions.editDailySteps(userId, { steps, date });
-    res.status(200).json("Success");
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error });
-  }
+  await logFunctions.editDailySteps(userId, { steps, date });
+  res.status(200).json("Success");
 });
 
 router.post("/daily/bodyfat", async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { bodyfat, date } = req.body;
+  const userId = req.auth.userId;
+  const { bodyfat, date } = req.body;
 
-    await logFunctions.editDailyBodyfat(userId, { bodyfat, date });
-    res.status(200).json("Success");
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error });
-  }
+  await logFunctions.editDailyBodyfat(userId, { bodyfat, date });
+  res.status(200).json("Success");
 });
 
 router.post("/daily/water", async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { water, date } = req.body;
+  const userId = req.auth.userId;
+  const { water, date } = req.body;
 
-    await logFunctions.editDailyWater(userId, { water, date });
-    res.status(200).json("Success");
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error });
-  }
+  await logFunctions.editDailyWater(userId, { water, date });
+  res.status(200).json("Success");
 });
 
 router.post("/daily/calories", async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { calories, date } = req.body;
+  const userId = req.auth.userId;
+  const { calories, date } = req.body;
 
-    await logFunctions.editDailyCalories(userId, { calories, date });
-    res.status(200).json("Success");
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error });
-  }
+  await logFunctions.editDailyCalories(userId, { calories, date });
+  res.status(200).json("Success");
 });
 
 router.get("/daily/sleep/oura/:date", async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const date = req.params.date;
-    const result = await logFunctions.getDailySleepOura(userId, date);
-    res.status(200).json(result);
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error });
-  }
+  const userId = req.auth.userId;
+  const date = req.params.date;
+  const result = await logFunctions.getDailySleepOura(userId, date);
+  res.status(200).json(result);
 });
 module.exports = router;
