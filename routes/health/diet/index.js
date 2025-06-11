@@ -5,7 +5,7 @@ router.get("/log/latest", async (req, res) => {
   const userId = req.auth.userId;
   const logs = await dietFunctions.getLatestDiet(userId);
 
-  if (!logs.length) res.status(200).json({});
+  if (!logs.length) res.status(200).json({ log: {}, supplements: [] });
 
   const log = logs[0];
 
