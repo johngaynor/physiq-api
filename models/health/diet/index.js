@@ -11,7 +11,7 @@ const dietFunctions = {
             protein,
             carbs
             fat,
-            calories,
+            CAST(calories AS DOUBLE) AS calories,
             effectiveDate,
             cardio, 
             cardioMinutes,
