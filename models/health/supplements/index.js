@@ -47,34 +47,28 @@ const supplementFunctions = {
   async toggleSupplementLog({ userId, date, supplementId, checked }) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [existing] = await mysqlPromise.query(
-          `
-          select id from supplementLogs
-          where userId = (select id from apiUsers where clerkId = ?)
-          and date = ? and supplementId = ?
-          `,
-          [userId, date, supplementId]
-        );
-
-        if (existing.length) {
-          // delete
-          await mysqlPromise.query(
-            `
-            DELETE FROM supplementLogs
-            WHERE id = ?
-            `,
-            [existing[0].id]
-          );
-        } else {
+        if (checked) {
           // insert
           await mysqlPromise.query(
             `
             INSERT INTO supplementLogs (userId, date, supplementId, completed)
             VALUES ((select id from apiUsers where clerkId = ?), ?, ?, ?)
             `,
-            [userId, date, supplementId, checked]
+            [userId, date, supplementId, 1]
+          );
+        } else {
+          // delete
+          await mysqlPromise.query(
+            `
+            DELETE FROM supplementLogs
+            WHERE userId = (select id from apiUsers where clerkId = ?)
+            AND date = ?
+            AND supplementId = ?
+            `,
+            [userId, date, supplementId]
           );
         }
+
         resolve("success");
       } catch (error) {
         reject(error);
