@@ -12,4 +12,16 @@ router.get("/logs", async (req, res) => {
   res.status(200).json(result);
 });
 
+router.post("/logs", async (req, res) => {
+  const userId = req.auth.userId;
+  const { date, supplementId, checked } = req.body;
+
+  await supplementFunctions.toggleSupplementLog({
+    userId,
+    date,
+    supplementId,
+    checked,
+  });
+  res.status(200).json("Success");
+});
 module.exports = router;
