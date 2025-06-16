@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = {
   production: "https://www.physiq.app",
   development: "http://localhost:3001",
+  staging: "https://physiq-web-app-git-dev-john-gaynors-projects.vercel.app/",
 };
 
 app.use(
