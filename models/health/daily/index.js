@@ -14,7 +14,7 @@ const logFunctions = {
             log.steps,
             CAST(slp.totalSleep AS DOUBLE) AS totalSleep,
             CAST(slp.totalBed AS DOUBLE) AS totalBed,
-            CASRT(slp.awakeQty AS DOUBLE) AS awakeQty,
+            CAST(slp.awakeQty AS DOUBLE) AS awakeQty,
             CAST(slp.lightQty AS DOUBLE) AS lightQty,
             CAST(slp.deepQty AS DOUBLE) AS deepQty,
             CAST(slp.remQty AS DOUBLE) AS remQty,
