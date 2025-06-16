@@ -18,7 +18,7 @@ const logFunctions = {
             CAST(slp.lightQty AS DOUBLE) AS lightQty,
             CAST(slp.deepQty AS DOUBLE) AS deepQty,
             CAST(slp.remQty AS DOUBLE) AS remQty,
-            log.bodyfat,
+            CAST(log.bodyfat AS DOUBLE) AS bodyfat,
             log.water,
             log.calories
         FROM weightLogs log
@@ -38,7 +38,7 @@ const logFunctions = {
             CAST(slp.lightQty AS DOUBLE) AS lightQty,
             CAST(slp.deepQty AS DOUBLE) AS deepQty,
             CAST(slp.remQty AS DOUBLE) AS remQty,
-            log.bodyfat,
+            CAST(log.bodyfat AS DOUBLE) AS bodyfat,
             log.water,
             log.calories
         FROM sleepLogs slp
