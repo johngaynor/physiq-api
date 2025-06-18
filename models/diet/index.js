@@ -1,4 +1,4 @@
-const mysqlPromise = require("../../config/database");
+const mysqlPool = require("../../config/database");
 
 const dietFunctions = {
   async getDietLogs(userId) {
