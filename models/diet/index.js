@@ -4,7 +4,8 @@ const dietFunctions = {
   async getDietLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [dietLogs] = await mysqlPromise.query(
+        const pool = await mysqlPool;
+        const [dietLogs] = await pool.query(
           `
             SELECT
                 id,
@@ -25,7 +26,7 @@ const dietFunctions = {
           [userId]
         );
 
-        const [supplements] = await mysqlPromise.query(
+        const [supplements] = await pool.query(
           `
             SELECT
                 supp.id,
