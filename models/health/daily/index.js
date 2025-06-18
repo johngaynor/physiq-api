@@ -6,7 +6,8 @@ const logFunctions = {
   async getDailyLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [result] = await mysqlPool.query(
+        const pool = await mysqlPool;
+        const [result] = await pool.query(
           `
         SELECT 
             log.date,
@@ -61,7 +62,8 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, weight } = values;
-        await mysqlPool.query(
+        const pool = await mysqlPool;
+        const [result] = await pool.query(
           `
           INSERT INTO weightLogs (date, userId, weight)
           VALUES (?, (select id from apiUsers where clerkId = ?), ?)
@@ -79,7 +81,8 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, steps } = values;
-        await mysqlPool.query(
+        const pool = await mysqlPool;
+        await pool.query(
           `
           INSERT INTO weightLogs (date, userId, steps)
           VALUES (?, (select id from apiUsers where clerkId = ?), ?)
@@ -97,7 +100,8 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, bodyfat } = values;
-        await mysqlPool.query(
+        const pool = await mysqlPool;
+        await pool.query(
           `
           INSERT INTO weightLogs (date, userId, bodyfat, bodyfatSource)
           VALUES (?, (select id from apiUsers where clerkId = ?), ?, 1)
@@ -115,7 +119,8 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, water } = values;
-        await mysqlPool.query(
+        const pool = await mysqlPool;
+        await pool.query(
           `
           INSERT INTO weightLogs (date, userId, water)
           VALUES (?, (select id from apiUsers where clerkId = ?), ?)
@@ -133,7 +138,8 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, calories } = values;
-        await mysqlPool.query(
+        const pool = await mysqlPool;
+        await pool.query(
           `
           INSERT INTO weightLogs (date, userId, calories)
           VALUES (?, (select id from apiUsers where clerkId = ?), ?)
@@ -150,7 +156,8 @@ const logFunctions = {
   async getDailySleepOura(userId, date) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [existing] = await mysqlPool.query(
+        const pool = await mysqlPool;
+        const [existing] = await pool.query(
           `
           select * from sleepLogs where userId = (select id from apiUsers where clerkId = ?) and date = ?
           `,
@@ -159,7 +166,7 @@ const logFunctions = {
 
         if (!existing.length) {
           // get correct userId
-          const [user] = await mysqlPool.query(
+          const [user] = await pool.query(
             `select id from apiUsers where clerkId = ?`,
             [userId]
           );
