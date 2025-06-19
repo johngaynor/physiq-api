@@ -1,11 +1,10 @@
-const mysqlPool = require("../../config/database");
+const db = require("../../config/database");
 
 const dietFunctions = {
   async getDietLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const pool = await mysqlPool;
-        const [dietLogs] = await pool.query(
+        const [dietLogs] = await db.query(
           `
             SELECT
                 id,
@@ -26,7 +25,7 @@ const dietFunctions = {
           [userId]
         );
 
-        const [supplements] = await pool.query(
+        const [supplements] = await db.query(
           `
             SELECT
                 supp.id,

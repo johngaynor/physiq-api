@@ -1,11 +1,10 @@
-const mysqlPool = require("../../../config/database");
+const db = require("../../../config/database");
 
 const supplementFunctions = {
   async getSupplements() {
     return new Promise(async function (resolve, reject) {
       try {
-        const pool = await mysqlPool;
-        const [result] = await pool.query(
+        const [result] = await db.query(
           `
           SELECT
             id,
@@ -27,8 +26,7 @@ const supplementFunctions = {
   async getSupplementLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const pool = await mysqlPool;
-        const [result] = await pool.query(
+        const [result] = await db.query(
           `
           SELECT
             supplementId,
@@ -49,10 +47,9 @@ const supplementFunctions = {
   async toggleSupplementLog({ userId, date, supplementId, checked }) {
     return new Promise(async function (resolve, reject) {
       try {
-        const pool = await mysqlPool;
         if (checked) {
           // insert
-          await pool.query(
+          await db.query(
             `
             INSERT INTO supplementLogs (userId, date, supplementId, completed)
             VALUES ((select id from apiUsers where clerkId = ?), ?, ?, ?)
@@ -61,7 +58,7 @@ const supplementFunctions = {
           );
         } else {
           // delete
-          await pool.query(
+          await db.query(
             `
             DELETE FROM supplementLogs
             WHERE userId = (select id from apiUsers where clerkId = ?)

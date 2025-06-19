@@ -1,11 +1,10 @@
-const mysqlPool = require("../../config/database");
+const db = require("../../config/database");
 
 const allFunctions = {
   async getApps() {
     return new Promise(async function (resolve, reject) {
       try {
-        const pool = await mysqlPool;
-        const [result] = await pool.query(
+        const [result] = await db.query(
           `
           SELECT
             id,
