@@ -17,7 +17,6 @@ async function query(query, params = []) {
   const connection = await pool.getConnection();
   try {
     await connection.ping(); // optional but helps detect stale sockets
-    console.log("Successfully pinged the database");
     return await connection.query(query, params);
   } catch (err) {
     console.error("Query failed:", err);
