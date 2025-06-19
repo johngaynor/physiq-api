@@ -3,16 +3,14 @@ const config = require("./index");
 
 const mysqlPool = mysql.createPool(config.mySQLConfig);
 
-const pool = mysqlPool
+mysqlPool
   .getConnection()
   .then((conn) => {
-    conn.release();
     console.log(`Connected to ${config.mySQLConfig.database} Database`);
-    return mysqlPool;
+    conn.release();
   })
   .catch((err) => {
-    console.error("MySQL Database Connection Failed! Bad Config: ", err);
-    process.exit(1);
+    console.error("Initial MySQL connection failed:", err);
   });
 
-module.exports = pool;
+module.exports = mysqlPool;

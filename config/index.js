@@ -7,10 +7,10 @@ const config = {
     database: process.env.MYSQL_DATABASE,
     port: process.env.MYSQL_PORT,
     waitForConnections: true,
+    connectionLimit: 10,
     queueLimit: 0,
     connectTimeout: 10000,
-    enableKeepAlive: true,
-    keepAliveInitialDelay: 0,
+    idleTimeout: 60000,
   },
   ouraIntegrationApiKey: process.env.OURA_INTEGRATION_API_KEY,
 };
