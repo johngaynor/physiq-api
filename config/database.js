@@ -13,16 +13,28 @@ pool
     console.error("Initial MySQL connection failed:", err);
   });
 
-async function query(query, params = []) {
-  const connection = await pool.getConnection();
+// async function query(query, params = []) {
+//   const connection = await pool.getConnection();
+//   try {
+//     await connection.ping(); // optional but helps detect stale sockets
+//     return await connection.query(query, params);
+//   } catch (err) {
+//     console.error("Query failed:", err);
+//     throw err;
+//   } finally {
+//     connection.release();
+//   }
+// }
+
+async function query(sql, params = []) {
+  const connection = await mysql.createConnection(config.mySQLConfig);
   try {
-    await connection.ping(); // optional but helps detect stale sockets
-    return await connection.query(query, params);
+    return await connection.query(sql, params);
   } catch (err) {
-    console.error("Query failed:", err);
+    console.error("Direct connection query failed:", err);
     throw err;
   } finally {
-    connection.release();
+    await connection.end(); // Close the connection after each use
   }
 }
 
