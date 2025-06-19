@@ -25,12 +25,21 @@ const logFunctions = {
               WHEN log.weight IS NOT NULL AND log.bodyfat IS NOT NULL 
               THEN CAST(log.weight AS DOUBLE) * (100 - CAST(log.bodyfat AS DOUBLE)) / 100
               ELSE NULL
-            END AS ffm
+            END AS ffm,
+            dlog.calories as caloriesTarget,
+            dlog.water as waterTarget,
+            dlog.steps as stepsTarget
         FROM weightLogs log
         LEFT JOIN sleepLogs slp 
             ON slp.date = log.date AND slp.userId = log.userId
         LEFT JOIN apiUsers api 
             ON api.id = log.userId
+        LEFT JOIN dietLogs dlog
+            on dlog.effectiveDate = (
+                SELECT MAX(effectiveDate)
+                FROM dietLogs
+                WHERE effectiveDate <= log.date AND userId = log.userId
+            )
         WHERE api.clerkId = ?
         UNION
         SELECT 
@@ -50,12 +59,21 @@ const logFunctions = {
                 WHEN log.weight IS NOT NULL AND log.bodyfat IS NOT NULL 
                 THEN CAST(log.weight AS DOUBLE) * (100 - CAST(log.bodyfat AS DOUBLE)) / 100
                 ELSE NULL
-            END AS ffm
+            END AS ffm,
+            dlog.calories as caloriesTarget,
+            dlog.water as waterTarget,
+            dlog.steps as stepsTarget
         FROM sleepLogs slp
         LEFT JOIN weightLogs log 
             ON log.date = slp.date AND log.userId = slp.userId
         LEFT JOIN apiUsers api 
             ON api.id = slp.userId
+        LEFT JOIN dietLogs dlog
+            on dlog.effectiveDate = (
+                SELECT MAX(effectiveDate)
+                FROM dietLogs
+                WHERE effectiveDate <= log.date AND userId = log.userId
+            )
         WHERE api.clerkId = ?
           AND log.date IS NULL
         `,
