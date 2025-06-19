@@ -1,18 +1,20 @@
 const mysql = require("mysql2/promise");
 const config = require("./index");
 
-const mysqlPool = mysql.createPool(config.mySQLConfig);
+const pool = mysql.createPool(config.mySQLConfig);
 
-const pool = mysqlPool
-  .getConnection()
-  .then((conn) => {
-    conn.release();
-    console.log(`Connected to ${config.mySQLConfig.database} Database`);
-    return mysqlPool;
-  })
-  .catch((err) => {
-    console.error("MySQL Database Connection Failed! Bad Config: ", err);
-    process.exit(1);
-  });
+// pinging every 30 seconds
+setInterval(async () => {
+  try {
+    await pool.query("SELECT 1");
+    console.log("Keep-alive ping successful");
+  } catch (err) {
+    console.error("Keep-alive ping failed:", err);
+  }
+}, 30000);
+
+pool.on?.("error", (err) => {
+  console.error("MySQL pool error:", err);
+});
 
 module.exports = pool;
