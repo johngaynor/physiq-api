@@ -20,7 +20,12 @@ const logFunctions = {
             CAST(slp.remQty AS DOUBLE) AS remQty,
             CAST(log.bodyfat AS DOUBLE) AS bodyfat,
             log.water,
-            log.calories
+            log.calories,
+            CASE 
+              WHEN log.weight IS NOT NULL AND log.bodyfat IS NOT NULL 
+              THEN CAST(log.weight AS DOUBLE) * (100 - CAST(log.bodyfat AS DOUBLE)) / 100
+              ELSE NULL
+            END AS ffm
         FROM weightLogs log
         LEFT JOIN sleepLogs slp 
             ON slp.date = log.date AND slp.userId = log.userId
@@ -40,7 +45,12 @@ const logFunctions = {
             CAST(slp.remQty AS DOUBLE) AS remQty,
             CAST(log.bodyfat AS DOUBLE) AS bodyfat,
             log.water,
-            log.calories
+            log.calories,
+            CASE 
+                WHEN log.weight IS NOT NULL AND log.bodyfat IS NOT NULL 
+                THEN CAST(log.weight AS DOUBLE) * (100 - CAST(log.bodyfat AS DOUBLE)) / 100
+                ELSE NULL
+            END AS ffm
         FROM sleepLogs slp
         LEFT JOIN weightLogs log 
             ON log.date = slp.date AND log.userId = slp.userId
