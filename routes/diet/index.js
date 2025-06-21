@@ -7,4 +7,11 @@ router.get("/logs", async (req, res) => {
   res.status(200).json(result);
 });
 
+router.post("/log", async (req, res) => {
+  const userId = req.auth.userId;
+  const values = req.body;
+  const result = await dietFunctions.editDietLog(userId, values);
+  res.status(200).json(result);
+});
+
 module.exports = router;

@@ -61,6 +61,47 @@ const dietFunctions = {
       }
     });
   },
+  async editDietLog(
+    userId,
+    {
+      id,
+      protein,
+      carbs,
+      fat,
+      calories,
+      effectiveDate,
+      cardio,
+      cardioMinutes,
+      notes,
+      water,
+      steps,
+      phase,
+      supplements,
+    }
+  ) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        console.log(userId, {
+          id,
+          protein,
+          carbs,
+          fat,
+          calories,
+          effectiveDate,
+          cardio,
+          cardioMinutes,
+          notes,
+          water,
+          steps,
+          phase,
+          supplements,
+        });
+        resolve("success");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = dietFunctions;
