@@ -81,22 +81,178 @@ const dietFunctions = {
   ) {
     return new Promise(async function (resolve, reject) {
       try {
-        console.log(userId, {
-          id,
-          protein,
-          carbs,
-          fat,
-          calories,
-          effectiveDate,
-          cardio,
-          cardioMinutes,
-          notes,
-          water,
-          steps,
-          phase,
-          supplements,
+        let returnId = id;
+        // update existing
+        if (id) {
+          // update main table
+          await db.query(
+            `
+              UPDATE dietLogs
+              SET
+                protein = ?,
+                carbs = ?,
+                fat = ?,
+                calories = ?,
+                effectiveDate = ?,
+                cardio = ?,
+                cardioMinutes = ?,
+                notes = ?,
+                water = ?,
+                steps = ?,
+                phase = ?
+              WHERE id = ?
+              AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+            `,
+            [
+              protein,
+              carbs,
+              fat,
+              calories,
+              effectiveDate,
+              cardio,
+              cardioMinutes,
+              notes,
+              water,
+              steps,
+              phase,
+              id,
+              userId,
+            ]
+          );
+          // delete existing supplements
+          await db.query(
+            `
+              DELETE FROM dietLogsSupplements
+              WHERE logId = ?
+            `,
+            [id]
+          );
+          // insert new supplements
+          if (supplements && supplements.length > 0) {
+            const supplementValues = supplements.map((supp) => [
+              id,
+              supp.supplementId,
+              supp.dosage,
+              supp.frequency,
+            ]);
+            await db.query(
+              `
+                INSERT INTO dietLogsSupplements (logId, supplementId, dosage, frequency)
+                VALUES ?
+              `,
+              [supplementValues]
+            );
+          }
+        } else {
+          // insert
+          const [result] = await db.query(
+            `
+              INSERT INTO dietLogs (
+                userId,
+                protein,
+                carbs,
+                fat,
+                calories,
+                effectiveDate,
+                cardio,
+                cardioMinutes,
+                notes,
+                water,
+                steps,
+                phase
+              )
+              VALUES (
+                (SELECT id FROM apiUsers WHERE clerkId = ?),
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?
+              )
+            `,
+            [
+              userId,
+              protein,
+              carbs,
+              fat,
+              calories,
+              effectiveDate,
+              cardio,
+              cardioMinutes,
+              notes,
+              water,
+              steps,
+              phase,
+            ]
+          );
+
+          const newId = result.insertId;
+
+          // insert supplements
+          if (supplements && supplements.length > 0) {
+            const supplementValues = supplements.map((supp) => [
+              newId,
+              supp.supplementId,
+              supp.dosage,
+              supp.frequency,
+            ]);
+            await db.query(
+              `
+                INSERT INTO dietLogsSupplements (logId, supplementId, dosage, frequency)
+                VALUES ?
+              `,
+              [supplementValues]
+            );
+          }
+
+          returnId = newId;
+        }
+
+        // get created/updated log and corresponding supplements
+        const [log] = await db.query(
+          `
+            SELECT
+                id,
+                cast(protein as double) as protein,
+                cast(carbs as double) as carbs,
+                cast(fat as double) as fat,
+                cast(calories as double) as calories,
+                effectiveDate,
+                cardio,
+                cardioMinutes, 
+                notes,
+                water, 
+                steps,
+                phase
+            FROM dietLogs
+            WHERE id = ?
+              AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+          `,
+          [returnId, userId]
+        );
+        const [newSupplements] = await db.query(
+          `
+            SELECT
+                supp.id,
+                supp.supplementId,
+                supp.dosage,
+                supp.frequency
+            FROM dietLogsSupplements supp
+            WHERE supp.logId = ?
+          `,
+          [returnId]
+        );
+
+        resolve({
+          existing: !!id,
+          log: { ...log[0], supplements: newSupplements },
         });
-        resolve("success");
       } catch (error) {
         reject(error);
       }
