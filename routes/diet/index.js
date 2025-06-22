@@ -14,4 +14,11 @@ router.post("/log", async (req, res) => {
   res.status(200).json(result);
 });
 
+router.delete("/log/:id", async (req, res) => {
+  const userId = req.auth.userId;
+  const logId = req.params.id;
+  const result = await dietFunctions.deleteDietLog(userId, logId);
+  res.status(200).json(result);
+});
+
 module.exports = router;

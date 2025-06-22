@@ -258,6 +258,23 @@ const dietFunctions = {
       }
     });
   },
+  async deleteDietLog(userId, logId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        await db.query(
+          `
+            DELETE FROM dietLogs
+            WHERE userId = (select id from apiUsers where clerkId = ?)
+              and id = ?
+        `,
+          [userId, logId]
+        );
+        resolve("Success");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = dietFunctions;
