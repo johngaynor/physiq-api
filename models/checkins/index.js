@@ -60,6 +60,169 @@ const checkInFunctions = {
       }
     });
   },
+
+  async editCheckIn(
+    userId,
+    {
+      id,
+      date,
+      hormones,
+      phase,
+      timeline,
+      cheats,
+      comments,
+      training,
+      avgTotalSleep,
+      avgTotalBed,
+      avgRecoveryIndex,
+      avgRemQty,
+      avgDeepQty,
+      attachments,
+    }
+  ) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        let returnId = id;
+        // update existing
+        if (id) {
+          // update main table
+          await db.query(
+            `
+              UPDATE checkIns
+              SET
+                date = ?,
+                hormones = ?,
+                phase = ?,
+                timeline = ?,
+                cheats = ?,
+                comments = ?,
+                training = ?,
+                avgTotalSleep = ?,
+                avgTotalBed = ?,
+                avgRecoveryIndex = ?,
+                avgRemQty = ?,
+                avgDeepQty = ?
+              WHERE id = ?
+              AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+            `,
+            [
+              date,
+              hormones,
+              phase,
+              timeline,
+              cheats,
+              comments,
+              training,
+              avgTotalSleep,
+              avgTotalBed,
+              avgRecoveryIndex,
+              avgRemQty,
+              avgDeepQty,
+              id,
+              userId,
+            ]
+          );
+          // delete existing attachments
+          await db.query(
+            `
+              DELETE FROM checkInsAttachments
+              WHERE checkInId = ?
+            `,
+            [id]
+          );
+          // insert new attachments
+          if (attachments && attachments.length > 0) {
+            const attachmentValues = attachments.map((att) => [
+              id,
+              att.s3Filename,
+              att.poseId,
+            ]);
+            await db.query(
+              `
+                INSERT INTO checkInsAttachments (checkInId, s3Filename, poseId)
+                VALUES ?
+              `,
+              [attachmentValues]
+            );
+          }
+        } else {
+          // insert new check-in
+          const [result] = await db.query(
+            `
+              INSERT INTO checkIns (
+                userId,
+                date,
+                hormones,
+                phase,
+                timeline,
+                cheats,
+                comments,
+                training,
+                avgTotalSleep,
+                avgTotalBed,
+                avgRecoveryIndex,
+                avgRemQty,
+                avgDeepQty
+              )
+              VALUES (
+                (SELECT id FROM apiUsers WHERE clerkId = ?),
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?
+              )
+            `,
+            [
+              userId,
+              date,
+              hormones,
+              phase,
+              timeline,
+              cheats,
+              comments,
+              training,
+              avgTotalSleep,
+              avgTotalBed,
+              avgRecoveryIndex,
+              avgRemQty,
+              avgDeepQty,
+            ]
+          );
+
+          const newId = result.insertId;
+          returnId = newId;
+
+          // insert attachments
+          if (attachments && attachments.length > 0) {
+            const attachmentValues = attachments.map((att) => [
+              newId,
+              att.s3Filename,
+              att.poseId,
+            ]);
+            await db.query(
+              `
+                INSERT INTO checkInsAttachments (checkInId, s3Filename, poseId)
+                VALUES ?
+              `,
+              [attachmentValues]
+            );
+          }
+        }
+
+        resolve({ id: returnId });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = checkInFunctions;
