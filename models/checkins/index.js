@@ -33,7 +33,7 @@ const checkInFunctions = {
                 att.checkInId,
                 att.s3Filename,
                 att.poseId
-            FROM attachments att
+            FROM checkInsAttachments att
             LEFT JOIN checkIns ci
                 ON ci.id = att.checkInId
             WHERE ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
