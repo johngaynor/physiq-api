@@ -51,4 +51,17 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { id } = req.params;
+
+    const result = await checkInFunctions.deleteCheckIn(userId, id);
+    res.status(200).json({ message: result });
+  } catch (error) {
+    console.error("Error deleting check-in:", error);
+    res.status(500).json({ error: "Failed to delete check-in" });
+  }
+});
+
 module.exports = router;

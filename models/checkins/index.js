@@ -201,6 +201,24 @@ const checkInFunctions = {
       }
     });
   },
+
+  async deleteCheckIn(userId, checkInId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        await db.query(
+          `
+            DELETE FROM checkIns
+            WHERE userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+              AND id = ?
+        `,
+          [userId, checkInId]
+        );
+        resolve("Success");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = checkInFunctions;
