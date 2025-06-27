@@ -9,12 +9,10 @@ const supplementFunctions = {
           SELECT
             id,
             name,
-            description,
-            dosage,
-            priority
-          FROM supplementItems
+            description
+          FROM supplements
           WHERE active = 1
-          order by priority DESC
+          order by id DESC
           `
         );
         resolve(result);
@@ -33,7 +31,7 @@ const supplementFunctions = {
             date,
             completed,
             reason
-          FROM supplementLogs
+          FROM supplementsLogs
           WHERE userId = (select id from apiUsers where clerkId = ?)
           `,
           [userId]
