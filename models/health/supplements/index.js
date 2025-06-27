@@ -49,7 +49,7 @@ const supplementFunctions = {
           // insert
           await db.query(
             `
-            INSERT INTO supplementLogs (userId, date, supplementId, completed)
+            INSERT INTO supplementsLogs (userId, date, supplementId, completed)
             VALUES ((select id from apiUsers where clerkId = ?), ?, ?, ?)
             `,
             [userId, date, supplementId, 1]
@@ -58,7 +58,7 @@ const supplementFunctions = {
           // delete
           await db.query(
             `
-            DELETE FROM supplementLogs
+            DELETE FROM supplementsLogs
             WHERE userId = (select id from apiUsers where clerkId = ?)
             AND date = ?
             AND supplementId = ?
