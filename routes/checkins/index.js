@@ -54,13 +54,17 @@ router.post("/", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const { id } = req.params;
+    const checkInId = req.params.id;
 
-    const result = await checkInFunctions.deleteCheckIn(userId, id);
-    res.status(200).json({ message: result });
+    const result = await checkInFunctions.deleteCheckIn(userId, checkInId);
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error deleting check-in:", error);
-    res.status(500).json({ error: "Failed to delete check-in" });
+    if (error.message === "Check-in not found or unauthorized") {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Failed to delete check-in" });
+    }
   }
 });
 

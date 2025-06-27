@@ -9,17 +9,6 @@ const checkInFunctions = {
            SELECT
                ci.id,
                ci.date,
-               ci.hormones,
-               COALESCE(
-                 (SELECT dl.phase 
-                  FROM dietLogs dl 
-                  WHERE dl.userId = ci.userId 
-                    AND dl.effectiveDate <= ci.date 
-                  ORDER BY dl.effectiveDate DESC 
-                  LIMIT 1), 
-                 ci.phase
-               ) as phase,
-               ci.timeline,
                ci.cheats,
                ci.comments,
                ci.training
@@ -94,26 +83,13 @@ const checkInFunctions = {
               UPDATE checkIns
               SET
                 date = ?,
-                hormones = ?,
-                phase = ?,
-                timeline = ?,
                 cheats = ?,
                 comments = ?,
                 training = ?
               WHERE id = ?
               AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
             `,
-            [
-              date,
-              hormones,
-              phase,
-              timeline,
-              cheats,
-              comments,
-              training,
-              id,
-              userId,
-            ]
+            [date, cheats, comments, training, id, userId]
           );
           // delete existing attachments
           await db.query(
@@ -145,9 +121,6 @@ const checkInFunctions = {
               INSERT INTO checkIns (
                 userId,
                 date,
-                hormones,
-                phase,
-                timeline,
                 cheats,
                 comments,
                 training
@@ -157,22 +130,10 @@ const checkInFunctions = {
                 ?,
                 ?,
                 ?,
-                ?,
-                ?,
-                ?,
                 ?
               )
             `,
-            [
-              userId,
-              date,
-              hormones,
-              phase,
-              timeline,
-              cheats,
-              comments,
-              training,
-            ]
+            [userId, date, cheats, comments, training]
           );
 
           const newId = result.insertId;
@@ -205,15 +166,30 @@ const checkInFunctions = {
   async deleteCheckIn(userId, checkInId) {
     return new Promise(async function (resolve, reject) {
       try {
+        // Delete attachments first (due to foreign key constraint)
         await db.query(
+          `
+            DELETE FROM checkInsAttachments
+            WHERE checkInId = ?
+          `,
+          [checkInId]
+        );
+
+        // Delete the check-in
+        const [result] = await db.query(
           `
             DELETE FROM checkIns
             WHERE userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
               AND id = ?
-        `,
+          `,
           [userId, checkInId]
         );
-        resolve("Success");
+
+        if (result.affectedRows === 0) {
+          reject(new Error("Check-in not found or unauthorized"));
+        } else {
+          resolve({ message: "Check-in deleted successfully" });
+        }
       } catch (error) {
         reject(error);
       }
