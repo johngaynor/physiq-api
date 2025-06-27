@@ -22,12 +22,7 @@ const checkInFunctions = {
                ci.timeline,
                ci.cheats,
                ci.comments,
-               ci.training,
-               cast(ci.avgTotalSleep as double) as avgTotalSleep,
-               cast(ci.avgTotalBed as double) as avgTotalBed,
-               cast(ci.avgRecoveryIndex as double) as avgRecoveryIndex,
-               cast(ci.avgRemQty as double) as avgRemQty,
-               cast(ci.avgDeepQty as double) as avgDeepQty
+               ci.training
            FROM checkIns ci
            WHERE ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
         `,
@@ -104,12 +99,7 @@ const checkInFunctions = {
                 timeline = ?,
                 cheats = ?,
                 comments = ?,
-                training = ?,
-                avgTotalSleep = ?,
-                avgTotalBed = ?,
-                avgRecoveryIndex = ?,
-                avgRemQty = ?,
-                avgDeepQty = ?
+                training = ?
               WHERE id = ?
               AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
             `,
@@ -121,11 +111,6 @@ const checkInFunctions = {
               cheats,
               comments,
               training,
-              avgTotalSleep,
-              avgTotalBed,
-              avgRecoveryIndex,
-              avgRemQty,
-              avgDeepQty,
               id,
               userId,
             ]
@@ -165,20 +150,10 @@ const checkInFunctions = {
                 timeline,
                 cheats,
                 comments,
-                training,
-                avgTotalSleep,
-                avgTotalBed,
-                avgRecoveryIndex,
-                avgRemQty,
-                avgDeepQty
+                training
               )
               VALUES (
                 (SELECT id FROM apiUsers WHERE clerkId = ?),
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
                 ?,
                 ?,
                 ?,
@@ -197,11 +172,6 @@ const checkInFunctions = {
               cheats,
               comments,
               training,
-              avgTotalSleep,
-              avgTotalBed,
-              avgRecoveryIndex,
-              avgRemQty,
-              avgDeepQty,
             ]
           );
 
