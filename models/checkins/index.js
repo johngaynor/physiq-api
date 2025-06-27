@@ -123,17 +123,24 @@ const checkInFunctions = {
                 date,
                 cheats,
                 comments,
-                training
+                training,
+                timeline
               )
               VALUES (
                 (SELECT id FROM apiUsers WHERE clerkId = ?),
                 ?,
                 ?,
                 ?,
-                ?
+                ?,
+                COALESCE(
+                  (SELECT MAX(timeline) + 1 
+                   FROM checkIns 
+                   WHERE userId = (SELECT id FROM apiUsers WHERE clerkId = ?)), 
+                  1
+                )
               )
             `,
-            [userId, date, cheats, comments, training]
+            [userId, date, cheats, comments, training, userId]
           );
 
           const newId = result.insertId;
