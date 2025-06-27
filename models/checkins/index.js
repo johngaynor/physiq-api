@@ -7,21 +7,29 @@ const checkInFunctions = {
         const [checkIns] = await db.query(
           `
            SELECT
-               id,
-               date,
-               hormones,
-               phase,
-               timeline,
-               cheats,
-               comments,
-               training,
-               cast(avgTotalSleep as double) as avgTotalSleep,
-               cast(avgTotalBed as double) as avgTotalBed,
-               cast(avgRecoveryIndex as double) as avgRecoveryIndex,
-               cast(avgRemQty as double) as avgRemQty,
-               cast(avgDeepQty as double) as avgDeepQty
-           FROM checkIns 
-           WHERE userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+               ci.id,
+               ci.date,
+               ci.hormones,
+               COALESCE(
+                 (SELECT dl.phase 
+                  FROM dietLogs dl 
+                  WHERE dl.userId = ci.userId 
+                    AND dl.effectiveDate <= ci.date 
+                  ORDER BY dl.effectiveDate DESC 
+                  LIMIT 1), 
+                 ci.phase
+               ) as phase,
+               ci.timeline,
+               ci.cheats,
+               ci.comments,
+               ci.training,
+               cast(ci.avgTotalSleep as double) as avgTotalSleep,
+               cast(ci.avgTotalBed as double) as avgTotalBed,
+               cast(ci.avgRecoveryIndex as double) as avgRecoveryIndex,
+               cast(ci.avgRemQty as double) as avgRemQty,
+               cast(ci.avgDeepQty as double) as avgDeepQty
+           FROM checkIns ci
+           WHERE ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
         `,
           [userId]
         );
