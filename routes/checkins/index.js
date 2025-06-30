@@ -77,6 +77,24 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Get attachments for a specific check-in
+router.get("/attachments/:id", async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { id } = req.params;
+
+    const result = await checkInFunctions.getCheckInAttachments(userId, id);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getting check-in attachments:", error);
+    if (error.message === "Check-in not found or unauthorized") {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Failed to get check-in attachments" });
+    }
+  }
+});
+
 // // Upload photos to existing check-in
 // router.post("/photos", uploadPhotos.array("images", 20), async (req, res) => {
 //   try {

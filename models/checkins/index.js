@@ -11,42 +11,83 @@ const checkInFunctions = {
                ci.date,
                ci.cheats,
                ci.comments,
-               ci.training
+               ci.training,
+               ci.timeline
            FROM checkIns ci
            WHERE ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+           ORDER BY ci.date DESC
         `,
           [userId]
         );
 
+        resolve(checkIns);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  async getCheckInAttachments(userId, checkInId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // First verify the check-in belongs to the user
+        const [checkInExists] = await db.query(
+          `
+            SELECT id FROM checkIns 
+            WHERE id = ? AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+          `,
+          [checkInId, userId]
+        );
+
+        if (!checkInExists.length) {
+          reject(new Error("Check-in not found or unauthorized"));
+          return;
+        }
+
+        // Get attachments for the check-in
         const [attachments] = await db.query(
           `
             SELECT
                 att.id,
-                att.checkInId,
                 att.s3Filename,
                 att.poseId
             FROM checkInsAttachments att
-            LEFT JOIN checkIns ci
-                ON ci.id = att.checkInId
-            WHERE ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+            WHERE att.checkInId = ?
           `,
-          [userId]
+          [checkInId]
         );
 
-        const checkInsWithAttachments = checkIns.map((checkIn) => {
-          return {
-            ...checkIn,
-            attachments: attachments
-              .filter((att) => att.checkInId === checkIn.id)
-              .map((att) => ({
-                id: att.id,
-                s3Filename: att.s3Filename,
-                poseId: att.poseId,
-              })),
-          };
-        });
+        // Generate signed URLs for each attachment
+        const { getUrl } = require("../../config/awsConfig");
+        const bucketName = process.env.S3_BUCKET_NAME || "checkin-photos-test";
+        
+        const attachmentsWithUrls = await Promise.all(
+          attachments.map(async (attachment) => {
+            try {
+              const signedUrl = await getUrl(bucketName, attachment.s3Filename);
+              return {
+                id: attachment.id,
+                url: signedUrl,
+                poseId: attachment.poseId,
+                filename: attachment.s3Filename
+              };
+            } catch (error) {
+              console.error(`Error generating URL for ${attachment.s3Filename}:`, error);
+              return {
+                id: attachment.id,
+                url: null,
+                poseId: attachment.poseId,
+                filename: attachment.s3Filename,
+                error: "Unable to generate URL"
+              };
+            }
+          })
+        );
 
-        resolve(checkInsWithAttachments);
+        resolve({ 
+          checkInId: parseInt(checkInId),
+          attachments: attachmentsWithUrls 
+        });
       } catch (error) {
         reject(error);
       }
