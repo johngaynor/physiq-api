@@ -55,22 +55,7 @@ const checkInFunctions = {
 
   async editCheckIn(
     userId,
-    {
-      id,
-      date,
-      hormones,
-      phase,
-      timeline,
-      cheats,
-      comments,
-      training,
-      avgTotalSleep,
-      avgTotalBed,
-      avgRecoveryIndex,
-      avgRemQty,
-      avgDeepQty,
-      attachments,
-    }
+    { id, date, cheats, comments, training, attachments }
   ) {
     return new Promise(async function (resolve, reject) {
       try {
@@ -115,7 +100,28 @@ const checkInFunctions = {
             );
           }
         } else {
-          // insert new check-in
+          // Get the user's internal ID first
+          const [userResult] = await db.query(
+            `SELECT id FROM apiUsers WHERE clerkId = ?`,
+            [userId]
+          );
+
+          if (!userResult.length) {
+            reject(new Error("User not found"));
+            return;
+          }
+
+          const internalUserId = userResult[0].id;
+
+          // Get the next timeline number
+          const [timelineResult] = await db.query(
+            `SELECT COALESCE(MAX(timeline), 0) + 1 as nextTimeline FROM checkIns WHERE userId = ?`,
+            [internalUserId]
+          );
+
+          const nextTimeline = timelineResult[0].nextTimeline;
+
+          // Insert new check-in
           const [result] = await db.query(
             `
               INSERT INTO checkIns (
@@ -126,21 +132,9 @@ const checkInFunctions = {
                 training,
                 timeline
               )
-              VALUES (
-                (SELECT id FROM apiUsers WHERE clerkId = ?),
-                ?,
-                ?,
-                ?,
-                ?,
-                COALESCE(
-                  (SELECT MAX(timeline) + 1 
-                   FROM checkIns 
-                   WHERE userId = (SELECT id FROM apiUsers WHERE clerkId = ?)), 
-                  1
-                )
-              )
+              VALUES (?, ?, ?, ?, ?, ?)
             `,
-            [userId, date, cheats, comments, training, userId]
+            [internalUserId, date, cheats, comments, training, nextTimeline]
           );
 
           const newId = result.insertId;
@@ -197,6 +191,148 @@ const checkInFunctions = {
         } else {
           resolve({ message: "Check-in deleted successfully" });
         }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  async addPhotos(userId, checkInId, fileNames) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // First verify that the check-in belongs to the user
+        const [checkInExists] = await db.query(
+          `
+            SELECT id FROM checkIns 
+            WHERE id = ? AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+          `,
+          [checkInId, userId]
+        );
+
+        if (!checkInExists.length) {
+          reject(new Error("Check-in not found or unauthorized"));
+          return;
+        }
+
+        // Insert the photo attachments
+        if (fileNames && fileNames.length > 0) {
+          const attachmentValues = fileNames.map((fileName) => [
+            checkInId,
+            fileName,
+            null, // poseId can be null for now
+          ]);
+
+          await db.query(
+            `
+              INSERT INTO checkInsAttachments (checkInId, s3Filename, poseId)
+              VALUES ?
+            `,
+            [attachmentValues]
+          );
+        }
+
+        resolve({
+          message: "Photos added successfully",
+          photosAdded: fileNames.length,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  async removePhoto(userId, checkInId, photoId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Verify the photo belongs to a check-in owned by the user
+        const [result] = await db.query(
+          `
+            DELETE att FROM checkInsAttachments att
+            INNER JOIN checkIns ci ON ci.id = att.checkInId
+            WHERE att.id = ? 
+              AND att.checkInId = ? 
+              AND ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+          `,
+          [photoId, checkInId, userId]
+        );
+
+        if (result.affectedRows === 0) {
+          reject(new Error("Photo not found or unauthorized"));
+        } else {
+          resolve({ message: "Photo removed successfully" });
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  async getPhotoUrls(userId, checkInId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Verify the check-in belongs to the user and get photos
+        const [photos] = await db.query(
+          `
+            SELECT att.id, att.s3Filename, att.poseId
+            FROM checkInsAttachments att
+            INNER JOIN checkIns ci ON ci.id = att.checkInId
+            WHERE att.checkInId = ? 
+              AND ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+          `,
+          [checkInId, userId]
+        );
+
+        if (!photos.length) {
+          // Check if check-in exists but has no photos
+          const [checkInExists] = await db.query(
+            `
+              SELECT id FROM checkIns 
+              WHERE id = ? AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+            `,
+            [checkInId, userId]
+          );
+
+          if (!checkInExists.length) {
+            reject(new Error("Check-in not found or unauthorized"));
+            return;
+          }
+        }
+
+        // Generate signed URLs for each photo
+        const { getUrl } = require("../../config/awsConfig");
+        const bucketName =
+          process.env.S3_BUCKET_NAME || "physiq-checkin-photos";
+
+        const photosWithUrls = await Promise.all(
+          photos.map(async (photo) => {
+            try {
+              const signedUrl = await getUrl(bucketName, photo.s3Filename);
+              return {
+                id: photo.id,
+                url: signedUrl,
+                poseId: photo.poseId,
+                filename: photo.s3Filename,
+              };
+            } catch (error) {
+              console.error(
+                `Error generating URL for ${photo.s3Filename}:`,
+                error
+              );
+              return {
+                id: photo.id,
+                url: null,
+                poseId: photo.poseId,
+                filename: photo.s3Filename,
+                error: "Unable to generate URL",
+              };
+            }
+          })
+        );
+
+        resolve({
+          checkInId: parseInt(checkInId),
+          photos: photosWithUrls,
+        });
       } catch (error) {
         reject(error);
       }
