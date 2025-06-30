@@ -60,7 +60,7 @@ const checkInFunctions = {
         // Generate signed URLs for each attachment
         const { getUrl } = require("../../config/awsConfig");
         const bucketName = process.env.S3_BUCKET_NAME || "checkin-photos-test";
-        
+
         const attachmentsWithUrls = await Promise.all(
           attachments.map(async (attachment) => {
             try {
@@ -69,25 +69,25 @@ const checkInFunctions = {
                 id: attachment.id,
                 url: signedUrl,
                 poseId: attachment.poseId,
-                filename: attachment.s3Filename
+                filename: attachment.s3Filename,
               };
             } catch (error) {
-              console.error(`Error generating URL for ${attachment.s3Filename}:`, error);
+              console.error(
+                `Error generating URL for ${attachment.s3Filename}:`,
+                error
+              );
               return {
                 id: attachment.id,
                 url: null,
                 poseId: attachment.poseId,
                 filename: attachment.s3Filename,
-                error: "Unable to generate URL"
+                error: "Unable to generate URL",
               };
             }
           })
         );
 
-        resolve({ 
-          checkInId: parseInt(checkInId),
-          attachments: attachmentsWithUrls 
-        });
+        resolve(attachmentsWithUrls);
       } catch (error) {
         reject(error);
       }
