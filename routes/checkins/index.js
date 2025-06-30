@@ -3,9 +3,7 @@ const checkInFunctions = require("../../models/checkins");
 const { upload } = require("../../config/awsConfig");
 
 // Create upload middleware for check-in photos
-const uploadPhotos = upload(
-  process.env.S3_BUCKET_NAME || "checkin-photos-test"
-);
+const uploadPhotos = upload(process.env.CHECKIN_BUCKET);
 
 router.get("/", async (req, res) => {
   const userId = req.auth.userId;

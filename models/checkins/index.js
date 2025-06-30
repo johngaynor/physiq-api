@@ -59,7 +59,7 @@ const checkInFunctions = {
 
         // Generate signed URLs for each attachment
         const { getUrl } = require("../../config/awsConfig");
-        const bucketName = process.env.S3_BUCKET_NAME || "checkin-photos-test";
+        const bucketName = process.env.CHECKIN_BUCKET;
 
         const attachmentsWithUrls = await Promise.all(
           attachments.map(async (attachment) => {
