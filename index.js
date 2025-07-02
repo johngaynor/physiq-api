@@ -2,16 +2,19 @@ const express = require("express");
 const dotenv = require("dotenv");
 const clerkAuth = require("./config/clerkAuth");
 const cors = require("cors");
+const limiter = require("./config/rateLimiters");
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(limiter);
+
 const allowedOrigins = {
   production: "https://www.physiq.app",
   development: "http://localhost:3001",
-  staging: "https://physiq-web-app-git-dev-john-gaynors-projects.vercel.app/",
+  staging: "https://physiq-web-app-git-dev-john-gaynors-projects.vercel.app",
 };
 
 app.use(
