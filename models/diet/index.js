@@ -82,6 +82,8 @@ const dietFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         let returnId = id;
+        const currentTime = new Date();
+
         // update existing
         if (id) {
           // update main table
@@ -99,7 +101,8 @@ const dietFunctions = {
                 notes = ?,
                 water = ?,
                 steps = ?,
-                phase = ?
+                phase = ?,
+                recentSubmitTime = ?
               WHERE id = ?
               AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
             `,
@@ -115,6 +118,7 @@ const dietFunctions = {
               water,
               steps,
               phase,
+              currentTime,
               id,
               userId,
             ]
@@ -159,10 +163,12 @@ const dietFunctions = {
                 notes,
                 water,
                 steps,
-                phase
+                phase,
+                recentSubmitTime
               )
               VALUES (
                 (SELECT id FROM apiUsers WHERE clerkId = ?),
+                ?,
                 ?,
                 ?,
                 ?,
@@ -189,6 +195,7 @@ const dietFunctions = {
               water,
               steps,
               phase,
+              currentTime,
             ]
           );
 
