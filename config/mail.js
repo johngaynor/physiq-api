@@ -5,6 +5,28 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 /**
+ * Get MIME content type based on file extension
+ * @param {string} filePath Path to the file
+ * @returns {string} MIME type
+ */
+function getContentType(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeTypes = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".pdf": "application/pdf",
+    ".txt": "text/plain",
+    ".doc": "application/msword",
+    ".docx":
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  };
+  return mimeTypes[ext] || "application/octet-stream";
+}
+
+/**
  * Send an email using Gmail SMTP
  * @param {string} to Who the email is being sent to.
  * @param {string} cc Who to include in the CC of the email.
@@ -46,7 +68,8 @@ ${body}`
               {
                 filename: path.basename(attachmentPath),
                 path: attachmentPath,
-                contentType: "application/pdf",
+                // Auto-detect content type based on file extension
+                contentType: getContentType(attachmentPath),
               },
             ]
           : [],

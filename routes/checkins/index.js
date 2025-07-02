@@ -1,9 +1,25 @@
 const router = require("express").Router();
 const checkInFunctions = require("../../models/checkins");
 const { upload } = require("../../config/awsConfig");
+const { sendEmail } = require("../../config/mail");
+const multer = require("multer");
 
 // Create upload middleware for check-in photos
 const uploadPhotos = upload(process.env.CHECKIN_BUCKET);
+
+// Create local multer instance for email attachments
+const localStorage = multer({
+  dest: "temp/",
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    // Allow images
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"), false);
+    }
+  },
+});
 
 router.get("/", async (req, res) => {
   const userId = req.auth.userId;
@@ -89,6 +105,80 @@ router.get("/attachments/:id", async (req, res) => {
       res.status(404).json({ error: error.message });
     } else {
       res.status(500).json({ error: "Failed to get check-in attachments" });
+    }
+  }
+});
+
+// Send check-in file to coach via email
+router.post("/send", localStorage.single("file"), async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { message } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file provided" });
+    }
+
+    // Get user info for email context
+    const userEmail =
+      req.auth.emailAddresses?.[0]?.emailAddress || "Unknown User";
+
+    // Test coach email - you can make this configurable via environment variable
+    const coachEmail = process.env.COACH_EMAIL || "coach@example.com";
+
+    const subject = `Check-in Submission from ${userEmail}`;
+    const body = `
+New check-in submission received:
+
+From: ${userEmail}
+User ID: ${userId}
+Submitted: ${new Date().toLocaleString()}
+
+${message ? `Message: ${message}` : "No message provided"}
+
+Please find the attached file for review.
+    `;
+
+    // Send email with attachment
+    await sendEmail(
+      coachEmail,
+      null, // no CC
+      null, // no BCC
+      subject,
+      body,
+      req.file.path // attachment path
+    );
+
+    // Clean up temporary file
+    const fs = require("fs");
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (cleanupError) {
+      console.error("Error cleaning up temp file:", cleanupError);
+    }
+
+    res.status(200).json({
+      message: "Check-in sent to coach successfully",
+      filename: req.file.originalname,
+      sentTo: coachEmail,
+    });
+  } catch (error) {
+    console.error("Error sending check-in to coach:", error);
+
+    // Clean up temp file in case of error
+    if (req.file) {
+      const fs = require("fs");
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (cleanupError) {
+        console.error("Error cleaning up temp file:", cleanupError);
+      }
+    }
+
+    if (error.message?.includes("Only image files")) {
+      res.status(400).json({ error: "Only image files are allowed" });
+    } else {
+      res.status(500).json({ error: "Failed to send check-in to coach" });
     }
   }
 });
