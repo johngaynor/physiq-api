@@ -12,8 +12,7 @@ const checkInFunctions = {
                ci.cheats,
                ci.comments,
                ci.training,
-               ci.timeline,
-               ci.recentSubmitTime
+               ci.timeline
            FROM checkIns ci
            WHERE ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
            ORDER BY ci.date DESC
