@@ -12,7 +12,8 @@ const checkInFunctions = {
                ci.cheats,
                ci.comments,
                ci.training,
-               ci.timeline
+               ci.timeline,
+               ci.recentSubmitTime
            FROM checkIns ci
            WHERE ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
            ORDER BY ci.date DESC
@@ -101,9 +102,11 @@ const checkInFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         let returnId = id;
+        const currentTime = new Date();
+        
         // update existing
         if (id) {
-          // update main table
+          // update main table with recentSubmitTime
           await db.query(
             `
               UPDATE checkIns
@@ -111,11 +114,12 @@ const checkInFunctions = {
                 date = ?,
                 cheats = ?,
                 comments = ?,
-                training = ?
+                training = ?,
+                recentSubmitTime = ?
               WHERE id = ?
               AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
             `,
-            [date, cheats, comments, training, id, userId]
+            [date, cheats, comments, training, currentTime, id, userId]
           );
           // delete existing attachments
           await db.query(
@@ -162,7 +166,7 @@ const checkInFunctions = {
 
           const nextTimeline = timelineResult[0].nextTimeline;
 
-          // Insert new check-in
+          // Insert new check-in with recentSubmitTime
           const [result] = await db.query(
             `
               INSERT INTO checkIns (
@@ -171,11 +175,12 @@ const checkInFunctions = {
                 cheats,
                 comments,
                 training,
-                timeline
+                timeline,
+                recentSubmitTime
               )
-              VALUES (?, ?, ?, ?, ?, ?)
+              VALUES (?, ?, ?, ?, ?, ?, ?)
             `,
-            [internalUserId, date, cheats, comments, training, nextTimeline]
+            [internalUserId, date, cheats, comments, training, nextTimeline, currentTime]
           );
 
           const newId = result.insertId;
