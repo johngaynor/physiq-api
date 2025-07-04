@@ -57,31 +57,45 @@ const checkInFunctions = {
           [checkInId]
         );
 
-        // Generate signed URLs for each attachment
-        const { getUrl } = require("../../config/awsConfig");
+        // Generate signed URLs and blob data for each attachment
+        const { getUrl, getFileAsBlob } = require("../../config/awsConfig");
         const bucketName = process.env.CHECKIN_BUCKET;
 
         const attachmentsWithUrls = await Promise.all(
           attachments.map(async (attachment) => {
             try {
               const signedUrl = await getUrl(bucketName, attachment.s3Filename);
+
+              // Get the file as blob
+              const blobData = await getFileAsBlob(
+                bucketName,
+                attachment.s3Filename
+              );
+
               return {
                 id: attachment.id,
                 url: signedUrl,
                 poseId: attachment.poseId,
-                filename: attachment.s3Filename,
+                s3Filename: attachment.s3Filename,
+                blob: {
+                  data: blobData.buffer.toString("base64"),
+                  contentType: blobData.contentType,
+                  size: blobData.contentLength,
+                  lastModified: blobData.lastModified,
+                },
               };
             } catch (error) {
               console.error(
-                `Error generating URL for ${attachment.s3Filename}:`,
+                `Error generating URL/blob for ${attachment.s3Filename}:`,
                 error
               );
               return {
                 id: attachment.id,
                 url: null,
                 poseId: attachment.poseId,
-                filename: attachment.s3Filename,
-                error: "Unable to generate URL",
+                s3Filename: attachment.s3Filename,
+                blob: null,
+                error: "Unable to generate URL or download blob",
               };
             }
           })
@@ -102,7 +116,7 @@ const checkInFunctions = {
       try {
         let returnId = id;
         const currentTime = new Date();
-        
+
         // update existing
         if (id) {
           // update main table with recentSubmitTime
@@ -179,7 +193,15 @@ const checkInFunctions = {
               )
               VALUES (?, ?, ?, ?, ?, ?, ?)
             `,
-            [internalUserId, date, cheats, comments, training, nextTimeline, currentTime]
+            [
+              internalUserId,
+              date,
+              cheats,
+              comments,
+              training,
+              nextTimeline,
+              currentTime,
+            ]
           );
 
           const newId = result.insertId;
@@ -343,32 +365,45 @@ const checkInFunctions = {
           }
         }
 
-        // Generate signed URLs for each photo
-        const { getUrl } = require("../../config/awsConfig");
-        const bucketName =
-          process.env.S3_BUCKET_NAME || "physiq-checkin-photos";
+        // Generate signed URLs and blob data for each photo
+        const { getUrl, getFileAsBlob } = require("../../config/awsConfig");
+        const bucketName = process.env.CHECKIN_BUCKET;
 
         const photosWithUrls = await Promise.all(
           photos.map(async (photo) => {
             try {
               const signedUrl = await getUrl(bucketName, photo.s3Filename);
+
+              // Get the file as blob
+              const blobData = await getFileAsBlob(
+                bucketName,
+                photo.s3Filename
+              );
+
               return {
                 id: photo.id,
                 url: signedUrl,
                 poseId: photo.poseId,
-                filename: photo.s3Filename,
+                s3Filename: photo.s3Filename,
+                blob: {
+                  data: blobData.buffer.toString("base64"),
+                  contentType: blobData.contentType,
+                  size: blobData.contentLength,
+                  lastModified: blobData.lastModified,
+                },
               };
             } catch (error) {
               console.error(
-                `Error generating URL for ${photo.s3Filename}:`,
+                `Error generating URL/blob for ${photo.s3Filename}:`,
                 error
               );
               return {
                 id: photo.id,
                 url: null,
                 poseId: photo.poseId,
-                filename: photo.s3Filename,
-                error: "Unable to generate URL",
+                s3Filename: photo.s3Filename,
+                blob: null,
+                error: "Unable to generate URL or download blob",
               };
             }
           })

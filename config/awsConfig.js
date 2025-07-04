@@ -99,4 +99,32 @@ async function deleteFile(bucket, filename) {
   }
 }
 
-module.exports = { upload, getUrl, deleteFile };
+async function getFileAsBlob(bucket, filename) {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: filename,
+    });
+
+    const response = await s3.send(command);
+
+    // Convert the readable stream to buffer
+    const chunks = [];
+    for await (const chunk of response.Body) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+
+    return {
+      buffer: buffer,
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+      lastModified: response.LastModified,
+    };
+  } catch (error) {
+    console.error("Error downloading file as blob:", error);
+    throw error;
+  }
+}
+
+module.exports = { upload, getUrl, deleteFile, getFileAsBlob };
