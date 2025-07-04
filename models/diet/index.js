@@ -32,10 +32,14 @@ const dietFunctions = {
                 supp.logId,
                 supp.supplementId,
                 supp.dosage,
-                supp.frequency
+                supp.frequency,
+                s.name as name,
+                s.description as description
             from dietLogsSupplements supp
             left join dietLogs log
                 on log.id = supp.logId
+            left join supplements s
+                on s.id = supp.supplementId
             WHERE log.userId = (select id from apiUsers where clerkId = ?)
           `,
           [userId]
@@ -49,6 +53,8 @@ const dietFunctions = {
               .map((supp) => ({
                 id: supp.id,
                 supplementId: supp.supplementId,
+                name: supp.name,
+                description: supp.description,
                 dosage: supp.dosage,
                 frequency: supp.frequency,
               })),
@@ -249,8 +255,11 @@ const dietFunctions = {
                 supp.id,
                 supp.supplementId,
                 supp.dosage,
-                supp.frequency
+                supp.frequency,
+                s.name as name,
+                s.description as description
             FROM dietLogsSupplements supp
+            LEFT JOIN supplements s ON s.id = supp.supplementId
             WHERE supp.logId = ?
           `,
           [returnId]
