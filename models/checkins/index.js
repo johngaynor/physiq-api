@@ -40,7 +40,11 @@ const checkInFunctions = {
         );
 
         if (!checkInExists.length) {
-          reject(new Error("Check-in not found or unauthorized"));
+          reject(
+            new Error(
+              "Check-in not found or unauthorized (getting attachments)"
+            )
+          );
           return;
         }
 
@@ -229,9 +233,10 @@ const checkInFunctions = {
           `,
           [userId, checkInId]
         );
-
         if (result.affectedRows === 0) {
-          reject(new Error("Check-in not found or unauthorized"));
+          reject(
+            new Error("Check-in not found or unauthorized (none affected)")
+          );
         } else {
           resolve({ message: "Check-in deleted successfully" });
         }
@@ -266,7 +271,11 @@ const checkInFunctions = {
           );
 
           if (!checkInExists.length) {
-            reject(new Error("Check-in not found or unauthorized"));
+            reject(
+              new Error(
+                "Check-in not found or unauthorized (getting photo urls)"
+              )
+            );
             return;
           }
         }
