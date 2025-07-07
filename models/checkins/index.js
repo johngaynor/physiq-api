@@ -215,7 +215,39 @@ const checkInFunctions = {
   async deleteCheckIn(userId, checkInId) {
     return new Promise(async function (resolve, reject) {
       try {
-        // Delete attachments first (due to foreign key constraint), also remove from aws
+        // First get all S3 filenames for this check-in so we can delete them from S3
+        const [attachments] = await db.query(
+          `
+            SELECT att.s3Filename
+            FROM checkInsAttachments att
+            INNER JOIN checkIns ci ON ci.id = att.checkInId
+            WHERE att.checkInId = ? 
+              AND ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+          `,
+          [checkInId, userId]
+        );
+
+        // Delete files from S3 if they exist
+        if (attachments.length > 0) {
+          const { deleteFile } = require("../../config/awsConfig");
+          const bucketName = process.env.CHECKIN_BUCKET;
+
+          // Delete each file from S3
+          const deletePromises = attachments.map(async (attachment) => {
+            try {
+              await deleteFile(bucketName, attachment.s3Filename);
+              console.log(`Successfully deleted S3 file: ${attachment.s3Filename}`);
+            } catch (error) {
+              console.error(`Error deleting S3 file ${attachment.s3Filename}:`, error);
+              // Continue with deletion even if S3 delete fails
+            }
+          });
+
+          // Wait for all S3 deletions to complete (or fail)
+          await Promise.allSettled(deletePromises);
+        }
+
+        // Delete attachments from database (due to foreign key constraint)
         await db.query(
           `
             DELETE FROM checkInsAttachments
@@ -233,12 +265,16 @@ const checkInFunctions = {
           `,
           [userId, checkInId]
         );
+
         if (result.affectedRows === 0) {
           reject(
             new Error("Check-in not found or unauthorized (none affected)")
           );
         } else {
-          resolve({ message: "Check-in deleted successfully" });
+          resolve({ 
+            message: "Check-in deleted successfully",
+            deletedFiles: attachments.length
+          });
         }
       } catch (error) {
         reject(error);
