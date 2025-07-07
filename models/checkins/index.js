@@ -134,29 +134,6 @@ const checkInFunctions = {
             `,
             [date, cheats, comments, training, currentTime, id, userId]
           );
-          // delete existing attachments
-          await db.query(
-            `
-              DELETE FROM checkInsAttachments
-              WHERE checkInId = ?
-            `,
-            [id]
-          );
-          // insert new attachments
-          if (attachments && attachments.length > 0) {
-            const attachmentValues = attachments.map((att) => [
-              id,
-              att.s3Filename,
-              att.poseId,
-            ]);
-            await db.query(
-              `
-                INSERT INTO checkInsAttachments (checkInId, s3Filename, poseId)
-                VALUES ?
-              `,
-              [attachmentValues]
-            );
-          }
         } else {
           // Get the user's internal ID first
           const [userResult] = await db.query(
@@ -234,7 +211,7 @@ const checkInFunctions = {
   async deleteCheckIn(userId, checkInId) {
     return new Promise(async function (resolve, reject) {
       try {
-        // Delete attachments first (due to foreign key constraint)
+        // Delete attachments first (due to foreign key constraint), also remove from aws
         await db.query(
           `
             DELETE FROM checkInsAttachments
@@ -263,77 +240,6 @@ const checkInFunctions = {
       }
     });
   },
-
-  async addPhotos(userId, checkInId, fileNames) {
-    return new Promise(async function (resolve, reject) {
-      try {
-        // First verify that the check-in belongs to the user
-        const [checkInExists] = await db.query(
-          `
-            SELECT id FROM checkIns 
-            WHERE id = ? AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
-          `,
-          [checkInId, userId]
-        );
-
-        if (!checkInExists.length) {
-          reject(new Error("Check-in not found or unauthorized"));
-          return;
-        }
-
-        // Insert the photo attachments
-        if (fileNames && fileNames.length > 0) {
-          const attachmentValues = fileNames.map((fileName) => [
-            checkInId,
-            fileName,
-            null, // poseId can be null for now
-          ]);
-
-          await db.query(
-            `
-              INSERT INTO checkInsAttachments (checkInId, s3Filename, poseId)
-              VALUES ?
-            `,
-            [attachmentValues]
-          );
-        }
-
-        resolve({
-          message: "Photos added successfully",
-          photosAdded: fileNames.length,
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-
-  async removePhoto(userId, checkInId, photoId) {
-    return new Promise(async function (resolve, reject) {
-      try {
-        // Verify the photo belongs to a check-in owned by the user
-        const [result] = await db.query(
-          `
-            DELETE att FROM checkInsAttachments att
-            INNER JOIN checkIns ci ON ci.id = att.checkInId
-            WHERE att.id = ? 
-              AND att.checkInId = ? 
-              AND ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
-          `,
-          [photoId, checkInId, userId]
-        );
-
-        if (result.affectedRows === 0) {
-          reject(new Error("Photo not found or unauthorized"));
-        } else {
-          resolve({ message: "Photo removed successfully" });
-        }
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-
   async getPhotoUrls(userId, checkInId) {
     return new Promise(async function (resolve, reject) {
       try {
