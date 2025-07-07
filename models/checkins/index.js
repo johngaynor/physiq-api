@@ -1,6 +1,25 @@
 const db = require("../../config/database");
 
 const checkInFunctions = {
+  async getPoses() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [poses] = await db.query(
+          `
+            SELECT
+                id,
+                name
+            FROM checkInsPoses
+          `
+        );
+
+        resolve(poses);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
   async getCheckIns(userId) {
     return new Promise(async function (resolve, reject) {
       try {
@@ -236,9 +255,14 @@ const checkInFunctions = {
           const deletePromises = attachments.map(async (attachment) => {
             try {
               await deleteFile(bucketName, attachment.s3Filename);
-              console.log(`Successfully deleted S3 file: ${attachment.s3Filename}`);
+              console.log(
+                `Successfully deleted S3 file: ${attachment.s3Filename}`
+              );
             } catch (error) {
-              console.error(`Error deleting S3 file ${attachment.s3Filename}:`, error);
+              console.error(
+                `Error deleting S3 file ${attachment.s3Filename}:`,
+                error
+              );
               // Continue with deletion even if S3 delete fails
             }
           });
@@ -271,9 +295,9 @@ const checkInFunctions = {
             new Error("Check-in not found or unauthorized (none affected)")
           );
         } else {
-          resolve({ 
+          resolve({
             message: "Check-in deleted successfully",
-            deletedFiles: attachments.length
+            deletedFiles: attachments.length,
           });
         }
       } catch (error) {
@@ -363,6 +387,37 @@ const checkInFunctions = {
         resolve({
           checkInId: parseInt(checkInId),
           photos: photosWithUrls,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  async assignPose(userId, attachmentId, poseId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Update the attachment's poseId (with user authorization check)
+        const [result] = await db.query(
+          `
+            UPDATE checkInsAttachments att
+            INNER JOIN checkIns ci ON ci.id = att.checkInId
+            SET att.poseId = ?
+            WHERE att.id = ? 
+              AND ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+          `,
+          [poseId, attachmentId, userId]
+        );
+
+        if (result.affectedRows === 0) {
+          reject(new Error("Attachment not found or unauthorized"));
+          return;
+        }
+
+        resolve({
+          message: "Pose ID assigned successfully",
+          attachmentId: parseInt(attachmentId),
+          poseId: poseId,
         });
       } catch (error) {
         reject(error);

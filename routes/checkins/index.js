@@ -27,6 +27,17 @@ router.get("/", async (req, res) => {
   res.status(200).json(result);
 });
 
+// Get all available poses
+router.get("/poses", async (req, res) => {
+  try {
+    const result = await checkInFunctions.getPoses();
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getting poses:", error);
+    res.status(500).json({ error: "Failed to get poses" });
+  }
+});
+
 // Create or update check-in with optional photo upload
 router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
   try {
@@ -105,6 +116,34 @@ router.get("/attachments/:id", async (req, res) => {
       res.status(404).json({ error: error.message });
     } else {
       res.status(500).json({ error: "Failed to get check-in attachments" });
+    }
+  }
+});
+
+// Assign pose ID to a specific attachment
+router.post("/attachments/:id/pose", async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const attachmentId = req.params.id;
+    const { poseId } = req.body;
+
+    // Validate poseId
+    if (poseId === undefined || poseId === null) {
+      return res.status(400).json({ error: "poseId is required" });
+    }
+
+    const result = await checkInFunctions.assignPose(
+      userId,
+      attachmentId,
+      poseId
+    );
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error assigning pose ID:", error);
+    if (error.message === "Attachment not found or unauthorized") {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Failed to assign pose ID" });
     }
   }
 });
