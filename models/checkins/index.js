@@ -437,7 +437,7 @@ const checkInFunctions = {
                 cc.date,
                 cc.comment,
                 au.name
-            FROM checkInComments cc
+            FROM checkInsCommentary cc
             INNER JOIN checkIns ci ON ci.id = cc.checkInId
             LEFT JOIN apiUsers au ON au.clerkId = cc.userId
             WHERE cc.checkInId = ?
