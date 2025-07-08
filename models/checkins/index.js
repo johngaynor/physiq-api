@@ -424,6 +424,34 @@ const checkInFunctions = {
       }
     });
   },
+
+  async getCheckInComments(checkInId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [comments] = await db.query(
+          `
+            SELECT
+                cc.id,
+                cc.checkInId,
+                cc.userId,
+                cc.date,
+                cc.comment,
+                au.name
+            FROM checkInComments cc
+            INNER JOIN checkIns ci ON ci.id = cc.checkInId
+            LEFT JOIN apiUsers au ON au.clerkId = cc.userId
+            WHERE cc.checkInId = ?
+            ORDER BY cc.date DESC
+          `,
+          [checkInId]
+        );
+
+        resolve(comments);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = checkInFunctions;
