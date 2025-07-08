@@ -452,6 +452,31 @@ const checkInFunctions = {
       }
     });
   },
+
+  async insertCheckInComment(checkInId, userId, comment) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const currentDate = new Date();
+        const [result] = await db.query(
+          `
+            INSERT INTO checkInsCommentary (checkInId, userId, comment, date)
+            VALUES (?, ?, ?, ?)
+          `,
+          [checkInId, userId, comment, currentDate]
+        );
+
+        resolve({
+          id: result.insertId,
+          checkInId: checkInId,
+          userId: userId,
+          comment: comment,
+          date: currentDate,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = checkInFunctions;
