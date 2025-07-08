@@ -41,9 +41,8 @@ router.get("/poses", async (req, res) => {
 // Get all check-in comments for a specific check-in
 router.get("/comments/:checkInId", async (req, res) => {
   try {
-    const userId = req.auth.userId;
     const { checkInId } = req.params;
-    const result = await checkInFunctions.getCheckInComments(userId, checkInId);
+    const result = await checkInFunctions.getCheckInComments(checkInId);
     res.status(200).json(result);
   } catch (error) {
     console.error("Error getting check-in comments:", error);
@@ -72,6 +71,13 @@ router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
         poseId: null,
       })),
     });
+
+    // add comment
+    await checkInFunctions.insertCheckInComment(
+      result.id,
+      userId,
+      id ? "Updated check-in" : "Original submission"
+    );
 
     res.status(200).json({
       ...result,

@@ -438,7 +438,6 @@ const checkInFunctions = {
                 cc.comment,
                 au.name
             FROM checkInsCommentary cc
-            INNER JOIN checkIns ci ON ci.id = cc.checkInId
             LEFT JOIN apiUsers au ON au.clerkId = cc.userId
             WHERE cc.checkInId = ?
             ORDER BY cc.date DESC
@@ -460,7 +459,7 @@ const checkInFunctions = {
         const [result] = await db.query(
           `
             INSERT INTO checkInsCommentary (checkInId, userId, comment, date)
-            VALUES (?, ?, ?, ?)
+            VALUES (?, (select id from apiUsers where clerkId = ?), ?, ?)
           `,
           [checkInId, userId, comment, currentDate]
         );
