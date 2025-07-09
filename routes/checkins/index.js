@@ -50,6 +50,29 @@ router.get("/comments/:checkInId", async (req, res) => {
   }
 });
 
+// Insert a new comment for a specific check-in
+router.post("/comments", async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { checkInId, comment } = req.body;
+
+    // Validate comment
+    if (!comment || comment.trim() === "") {
+      return res.status(400).json({ error: "Comment is required" });
+    }
+
+    const result = await checkInFunctions.insertCheckInComment(
+      checkInId,
+      userId,
+      comment.trim()
+    );
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error inserting check-in comment:", error);
+    res.status(500).json({ error: "Failed to insert check-in comment" });
+  }
+});
+
 // Create or update check-in with optional photo upload
 router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
   try {
