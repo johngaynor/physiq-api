@@ -438,7 +438,7 @@ const checkInFunctions = {
                 cc.comment,
                 au.name
             FROM checkInsCommentary cc
-            LEFT JOIN apiUsers au ON au.clerkId = cc.userId
+            LEFT JOIN apiUsers au ON au.id = cc.userId
             WHERE cc.checkInId = ?
             ORDER BY cc.date DESC
           `,
@@ -464,10 +464,15 @@ const checkInFunctions = {
           [checkInId, userId, comment, currentDate]
         );
 
+        const userId = await db.query(
+          `SELECT id FROM apiUsers WHERE clerkId = ?`,
+          [userId]
+        );
+
         resolve({
           id: result.insertId,
           checkInId: checkInId,
-          userId: userId,
+          userId: userId[0].id,
           comment: comment,
           date: currentDate,
         });
