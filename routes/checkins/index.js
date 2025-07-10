@@ -12,11 +12,14 @@ const localStorage = multer({
   dest: "temp/",
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    // Allow images
-    if (file.mimetype.startsWith("image/")) {
+    // Allow images and PDFs
+    if (
+      file.mimetype.startsWith("image/") ||
+      file.mimetype === "application/pdf"
+    ) {
       cb(null, true);
     } else {
-      cb(new Error("Only image files are allowed"), false);
+      cb(new Error("Only image files and PDFs are allowed"), false);
     }
   },
 });
@@ -194,7 +197,11 @@ router.post("/attachments/:id/pose", async (req, res) => {
 router.post("/send", localStorage.single("file"), async (req, res) => {
   try {
     const { filename, checkInId } = req.body;
-    const userId = req.auth.userId;
+    const userId = req.auth?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
 
     if (!req.file) {
       return res.status(400).json({ error: "No file provided" });
@@ -202,7 +209,7 @@ router.post("/send", localStorage.single("file"), async (req, res) => {
 
     // Send email with attachment
     await sendEmail(
-      "wbeuliss@gmail.com",
+      "johngaynordev@gmail.com",
       "",
       "",
       filename,
@@ -219,7 +226,7 @@ router.post("/send", localStorage.single("file"), async (req, res) => {
     }
 
     // Add comment to check-in
-    if (checkInId) {
+    if (checkInId && userId) {
       await checkInFunctions.insertCheckInComment(
         checkInId,
         userId,
@@ -230,7 +237,7 @@ router.post("/send", localStorage.single("file"), async (req, res) => {
     res.status(200).json("success");
   } catch (error) {
     console.error("Error sending file to coach:", error);
-    
+
     // Clean up temp file in case of error
     if (req.file) {
       const fs = require("fs");

@@ -39,16 +39,16 @@ function getContentType(filePath) {
 function sendEmail(to, cc, bcc, subject, body, attachmentPath) {
   return new Promise(async function (resolve, reject) {
     try {
-      const transporter = nodemailer.createTransporter({
+      const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: process.env.GMAIL_USER || "johngaynordev@gmail.com",
+          user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASSWORD,
         },
       });
 
       const mailOptions = {
-        from: process.env.GMAIL_USER || "johngaynordev@gmail.com",
+        from: process.env.GMAIL_USER,
         to: to,
         cc: cc,
         bcc: bcc,
