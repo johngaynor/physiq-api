@@ -209,7 +209,8 @@ router.post("/send", localStorage.single("file"), async (req, res) => {
 
     // Send email with attachment
     await sendEmail(
-      "johngaynordev@gmail.com",
+      // "johngaynordev@gmail.com",
+      "wbeuliss@gmail.com",
       "",
       "",
       `Gaynor Check-In - ${date}`,
