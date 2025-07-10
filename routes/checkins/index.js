@@ -197,6 +197,7 @@ router.post("/attachments/:id/pose", async (req, res) => {
 router.post("/send", localStorage.single("file"), async (req, res) => {
   try {
     const { checkInId, date } = req.body;
+    const userId = req.auth.userId;
 
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
