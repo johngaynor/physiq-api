@@ -198,7 +198,7 @@ router.post("/send", localStorage.single("file"), async (req, res) => {
   try {
     const { filename, checkInId } = req.body;
     const userId = req.auth?.userId;
-    
+
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -214,7 +214,8 @@ router.post("/send", localStorage.single("file"), async (req, res) => {
       "",
       filename,
       "",
-      req.file.path
+      req.file.path,
+      req.file.originalname
     );
 
     // Clean up temporary file

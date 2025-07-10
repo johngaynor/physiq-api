@@ -34,9 +34,18 @@ function getContentType(filePath) {
  * @param {string} body The main content of the email.
  * @param {string} bcc Who to include in the BCC of the email.
  * @param {string} [attachmentPath] Optional path to an attachment.
+ * @param {string} [originalFilename] Optional original filename for the attachment.
  * @returns {Promise<string>} Returns "Success" on successful send
  */
-function sendEmail(to, cc, bcc, subject, body, attachmentPath) {
+function sendEmail(
+  to,
+  cc,
+  bcc,
+  subject,
+  body,
+  attachmentPath,
+  originalFilename
+) {
   return new Promise(async function (resolve, reject) {
     try {
       const transporter = nodemailer.createTransport({
@@ -66,10 +75,10 @@ ${body}`
         attachments: attachmentPath
           ? [
               {
-                filename: path.basename(attachmentPath),
+                filename: originalFilename || path.basename(attachmentPath),
                 path: attachmentPath,
                 // Auto-detect content type based on file extension
-                contentType: getContentType(attachmentPath),
+                contentType: getContentType(originalFilename || attachmentPath),
               },
             ]
           : [],

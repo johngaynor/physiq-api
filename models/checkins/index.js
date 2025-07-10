@@ -452,7 +452,7 @@ const checkInFunctions = {
     });
   },
 
-  async insertCheckInComment(checkInId, userId, comment) {
+  async insertCheckInComment(checkInId, clerkId, comment) {
     return new Promise(async function (resolve, reject) {
       try {
         const currentDate = new Date();
@@ -461,12 +461,12 @@ const checkInFunctions = {
             INSERT INTO checkInsCommentary (checkInId, userId, comment, date)
             VALUES (?, (select id from apiUsers where clerkId = ?), ?, ?)
           `,
-          [checkInId, userId, comment, currentDate]
+          [checkInId, clerkId, comment, currentDate]
         );
 
         const userId = await db.query(
           `SELECT id FROM apiUsers WHERE clerkId = ?`,
-          [userId]
+          [clerkId]
         );
 
         resolve({
