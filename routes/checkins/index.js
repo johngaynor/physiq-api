@@ -196,8 +196,7 @@ router.post("/attachments/:id/pose", async (req, res) => {
 // Send PDF to coach via email
 router.post("/send", localStorage.single("file"), async (req, res) => {
   try {
-    const { filename, checkInId } = req.body;
-    const userId = req.auth?.userId;
+    const { checkInId, date } = req.body;
 
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
@@ -212,7 +211,7 @@ router.post("/send", localStorage.single("file"), async (req, res) => {
       "johngaynordev@gmail.com",
       "",
       "",
-      filename,
+      `Gaynor Check-In - ${date}`,
       "",
       req.file.path,
       req.file.originalname
