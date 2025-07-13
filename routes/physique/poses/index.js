@@ -3,7 +3,7 @@ const poseAnalysis = require("../../../models/physique/poses");
 const { upload } = require("../../../config/awsConfig");
 
 // Create upload middleware for pose analysis
-const uploadPhotos = upload("physique-pose-training");
+const uploadPhotos = upload(process.env.POSE_CLASSIFICATION_BUCKET);
 
 // GET /poses - Get all available poses for check-ins
 router.get("/", async (req, res) => {
