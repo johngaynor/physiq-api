@@ -1,7 +1,6 @@
 const db = require("../../config/database");
 
 const checkInFunctions = {
-
   async getCheckIns(userId) {
     return new Promise(async function (resolve, reject) {
       try {
