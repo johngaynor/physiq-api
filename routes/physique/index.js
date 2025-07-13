@@ -1,65 +1,6 @@
 const router = require("express").Router();
-const physiqueAnalysis = require("../../models/physique");
-const { upload } = require("../../config/awsConfig");
 
-// Create upload middleware for physique analysis
-const uploadPhotos = upload("physique-pose-training");
-
-// Upload file and forward to external API for pose analysis
-router.post("/analyze", uploadPhotos.single("file"), async (req, res) => {
-  try {
-    const userId = req.auth?.userId;
-
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ error: "No file provided" });
-    }
-
-    // Get the file buffer from S3
-    const { getFileAsBlob } = require("../../config/awsConfig");
-    const bucketName = "physique-pose-training";
-    const fileBuffer = await getFileAsBlob(bucketName, req.file.key);
-
-    // Call the physique analysis model
-    const analysisResult = await physiqueAnalysis.analyzePose(
-      fileBuffer.buffer,
-      req.file.originalname,
-      req.file.mimetype
-    );
-
-    // Return the analysis result to the frontend
-    res.status(200).json({
-      success: true,
-      fileUploaded: req.file.key,
-      analysisResult: analysisResult,
-    });
-  } catch (error) {
-    console.error("Error processing physique analysis:", error.message);
-
-    // Handle specific error types
-    if (error.response) {
-      // External API returned an error
-      res.status(error.response.status).json({
-        error: "Analysis API error",
-        details: error.response.data,
-      });
-    } else if (error.message?.includes("Invalid file type")) {
-      res
-        .status(400)
-        .json({ error: "Invalid file type. Only image files are allowed." });
-    } else if (error.message?.includes("File too large")) {
-      res
-        .status(400)
-        .json({ error: "File size too large. Maximum 10MB per file." });
-    } else {
-      res
-        .status(500)
-        .json({ error: "Failed to process file and call analysis API" });
-    }
-  }
-});
+// Include poses routes
+router.use("/poses", require("./poses"));
 
 module.exports = router;
