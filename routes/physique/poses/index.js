@@ -33,7 +33,7 @@ router.post("/analyze", uploadPhotos.single("file"), async (req, res) => {
 
     // Get the file buffer from S3
     const { getFileAsBlob } = require("../../../config/awsConfig");
-    const bucketName = "physique-pose-training";
+    const bucketName = process.env.POSE_CLASSIFICATION_BUCKET;
     const fileBuffer = await getFileAsBlob(bucketName, req.file.key);
 
     // Call the pose analysis model
