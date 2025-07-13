@@ -9,7 +9,7 @@ const uploadPhotos = upload(process.env.POSE_CLASSIFICATION_BUCKET);
 router.get("/", async (req, res) => {
   try {
     const poses = await poseAnalysis.getPoses();
-    res.status(200).json({ poses });
+    res.status(200).json(poses);
   } catch (error) {
     console.error("Error getting poses:", error);
     res.status(500).json({
