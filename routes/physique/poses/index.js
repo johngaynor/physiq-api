@@ -18,6 +18,35 @@ router.get("/", async (req, res) => {
   }
 });
 
+// POST /assign - Assign pose data
+router.post("/assign", async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    const { filename, id } = req.body;
+
+    if (!filename || !id) {
+      return res.status(400).json({
+        error: "Missing required fields: filename and id are required",
+      });
+    }
+
+    // Insert into physiquePoseClassification table
+    const result = await poseAnalysis.assignPose(userId, id, filename);
+
+    res.status(200).json({
+      success: true,
+      message: "Pose assignment saved successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error in pose assignment:", error);
+    res.status(500).json({
+      error: "Error processing pose assignment",
+      details: error.message,
+    });
+  }
+});
+
 // Upload file and forward to external API for pose analysis
 router.post("/analyze", uploadPhotos.single("file"), async (req, res) => {
   try {

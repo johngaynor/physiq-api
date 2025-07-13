@@ -22,6 +22,30 @@ const poseAnalysis = {
     });
   },
 
+  async assignPose(userId, poseId, s3Filename) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [result] = await db.query(
+          `
+            INSERT INTO physiquePoseClassification 
+            (userId, poseId, s3Filename)
+            VALUES ((select id from apiUsers where clerkId = ?), ?, ?)
+          `,
+          [userId, poseId, s3Filename]
+        );
+
+        resolve({
+          id: result.insertId,
+          userId,
+          poseId,
+          s3Filename,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
   async analyzePose(fileBuffer, originalFilename, mimetype) {
     return new Promise(async function (resolve, reject) {
       try {
