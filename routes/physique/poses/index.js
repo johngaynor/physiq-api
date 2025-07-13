@@ -5,6 +5,19 @@ const { upload } = require("../../../config/awsConfig");
 // Create upload middleware for pose analysis
 const uploadPhotos = upload("physique-pose-training");
 
+// GET /poses - Get all available poses for check-ins
+router.get("/", async (req, res) => {
+  try {
+    const poses = await poseAnalysis.getPoses();
+    res.status(200).json({ poses });
+  } catch (error) {
+    console.error("Error getting poses:", error);
+    res.status(500).json({
+      error: "Error retrieving poses",
+    });
+  }
+});
+
 // Upload file and forward to external API for pose analysis
 router.post("/analyze", uploadPhotos.single("file"), async (req, res) => {
   try {

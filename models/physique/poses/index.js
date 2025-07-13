@@ -1,7 +1,27 @@
 const axios = require("axios");
 const FormData = require("form-data");
+const db = require("../../../config/database");
 
 const poseAnalysis = {
+  async getPoses() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [poses] = await db.query(
+          `
+            SELECT
+                id,
+                name
+            FROM checkInsPoses
+          `
+        );
+
+        resolve(poses);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
   async analyzePose(fileBuffer, originalFilename, mimetype) {
     return new Promise(async function (resolve, reject) {
       try {

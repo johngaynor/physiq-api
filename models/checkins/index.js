@@ -1,24 +1,6 @@
 const db = require("../../config/database");
 
 const checkInFunctions = {
-  async getPoses() {
-    return new Promise(async function (resolve, reject) {
-      try {
-        const [poses] = await db.query(
-          `
-            SELECT
-                id,
-                name
-            FROM checkInsPoses
-          `
-        );
-
-        resolve(poses);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
 
   async getCheckIns(userId) {
     return new Promise(async function (resolve, reject) {

@@ -30,17 +30,6 @@ router.get("/", async (req, res) => {
   res.status(200).json(result);
 });
 
-// Get all available poses
-router.get("/poses", async (req, res) => {
-  try {
-    const result = await checkInFunctions.getPoses();
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("Error getting poses:", error);
-    res.status(500).json({ error: "Failed to get poses" });
-  }
-});
-
 // Get all check-in comments for a specific check-in
 router.get("/comments/:checkInId", async (req, res) => {
   try {
