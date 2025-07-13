@@ -8,49 +8,27 @@ const uploadPhotos = upload("physique-pose-training");
 // Upload file and forward to external API for pose analysis
 router.post("/analyze", uploadPhotos.single("file"), async (req, res) => {
   try {
-    console.log("=== PHYSIQUE ANALYSIS ROUTE DEBUG ===");
-
     const userId = req.auth?.userId;
-    console.log("User ID:", userId);
 
     if (!userId) {
-      console.log("ERROR: No user ID found");
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    console.log("File received:", req.file ? "YES" : "NO");
     if (!req.file) {
-      console.log("ERROR: No file provided");
       return res.status(400).json({ error: "No file provided" });
     }
 
-    console.log("File details:", {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      s3Key: req.file.key,
-    });
-
     // Get the file buffer from S3
-    console.log("Fetching file from S3...");
     const { getFileAsBlob } = require("../../config/awsConfig");
     const bucketName = "physique-pose-training";
-    console.log("S3 Bucket:", bucketName);
-
     const fileBuffer = await getFileAsBlob(bucketName, req.file.key);
-    console.log("File buffer size:", fileBuffer.buffer.length, "bytes");
 
     // Call the physique analysis model
-    console.log("Calling physique analysis model...");
     const analysisResult = await physiqueAnalysis.analyzePose(
       fileBuffer.buffer,
       req.file.originalname,
       req.file.mimetype
     );
-
-    console.log("Analysis completed successfully");
-    console.log("Analysis result:", JSON.stringify(analysisResult, null, 2));
-    console.log("==========================================");
 
     // Return the analysis result to the frontend
     res.status(200).json({
@@ -59,14 +37,7 @@ router.post("/analyze", uploadPhotos.single("file"), async (req, res) => {
       analysisResult: analysisResult,
     });
   } catch (error) {
-    console.error("=== PHYSIQUE ANALYSIS ERROR ===");
-    console.error("Error details:", error);
-    console.error("Error message:", error.message);
-    if (error.response) {
-      console.error("External API response status:", error.response.status);
-      console.error("External API response data:", error.response.data);
-    }
-    console.error("================================");
+    console.error("Error processing physique analysis:", error.message);
 
     // Handle specific error types
     if (error.response) {
