@@ -4,4 +4,5 @@ module.exports = function (app) {
   app.use("/api/checkins", require("./checkins"));
   app.use("/api/physique", require("./physique"));
   app.use("/api/all", require("./all"));
+  app.use("/api/ai", require("./ai"));
 };
