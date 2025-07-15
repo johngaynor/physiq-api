@@ -46,25 +46,42 @@ const poseAnalysis = {
     });
   },
 
-  async analyzePose(fileBuffer, originalFilename, mimetype) {
+  async analyzePose({
+    fileBuffer,
+    filename,
+    mimetype,
+    isTraining = 0,
+    userId,
+  }) {
     return new Promise(async function (resolve, reject) {
       try {
         // Create form data for FastAPI endpoint
         const form = new FormData();
         form.append("file", fileBuffer, {
-          filename: originalFilename,
+          filename: filename,
           contentType: mimetype,
         });
 
         // Send to FastAPI prediction endpoint
         const externalApiResponse = await axios.post(
-          "https://physiq-inference-api.onrender.com/predict",
+          "https://physiq-inference-api.onrender.com/inference/predict/single",
           form,
           {
             headers: {
               ...form.getHeaders(),
             },
           }
+        );
+
+        // insert logs
+        await db.query(
+          `INSERT INTO poseClassificationModelsCalls (modelId, userId, isTraining)
+        VALUES (
+          (SELECT MAX(id) FROM poseClassificationModels),
+          (SELECT id FROM apiUsers WHERE clerkId = ?),
+          ?
+        )`,
+          [userId, isTraining]
         );
 
         resolve(externalApiResponse.data);

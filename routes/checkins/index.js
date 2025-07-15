@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const checkInFunctions = require("../../models/checkins");
-const { upload } = require("../../config/awsConfig");
+const poseAnalysis = require("../../models/physique/poses");
+const { upload, getFileAsBlob } = require("../../config/awsConfig");
 const { sendEmail } = require("../../config/mail");
 const multer = require("multer");
 
@@ -71,8 +72,25 @@ router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
     const userId = req.auth.userId;
     const { id, date, cheats, comments, training } = req.body;
 
-    // Get uploaded file names from S3
-    const uploadedFiles = req.files ? req.files.map((file) => file.key) : [];
+    // Get uploaded files info from S3
+    const uploadedFiles = req.files || [];
+    const uploadedFileKeys = uploadedFiles.map((file) => file.key);
+
+    async function getPose(filename) {
+      const blob = await getFileAsBlob(process.env.CHECKIN_BUCKET, filename);
+      const result = await poseAnalysis.analyzePose({
+        fileBuffer: blob.buffer,
+        filename,
+        mimetype: blob.mimetype,
+        isTraining: 0,
+        userId,
+      });
+      return result;
+    }
+
+    const analysisResults = await Promise.all(
+      uploadedFileKeys.map((filename) => getPose(filename))
+    );
 
     // Create/update the check-in with the uploaded file names
     const result = await checkInFunctions.editCheckIn(userId, {
@@ -81,9 +99,11 @@ router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
       cheats,
       comments,
       training,
-      attachments: uploadedFiles.map((filename) => ({
+      attachments: uploadedFileKeys.map((filename) => ({
         s3Filename: filename,
-        poseId: null,
+        poseId:
+          analysisResults.find((res) => res.filename === filename)?.prediction
+            ?.predicted_class_id || null,
       })),
     });
 
@@ -96,7 +116,7 @@ router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
 
     res.status(200).json({
       ...result,
-      uploadedFiles: uploadedFiles,
+      uploadedFiles: uploadedFileKeys,
     });
   } catch (error) {
     console.error("Error creating/editing check-in:", error);

@@ -66,11 +66,13 @@ router.post("/analyze", uploadPhotos.single("file"), async (req, res) => {
     const fileBuffer = await getFileAsBlob(bucketName, req.file.key);
 
     // Call the pose analysis model
-    const analysisResult = await poseAnalysis.analyzePose(
-      fileBuffer.buffer,
-      req.file.originalname,
-      req.file.mimetype
-    );
+    const analysisResult = await poseAnalysis.analyzePose({
+      fileBuffer: fileBuffer.buffer,
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      isTraining: 1,
+      userId,
+    });
 
     // Return the analysis result to the frontend
     res.status(200).json({
