@@ -139,23 +139,10 @@ const checkInFunctions = {
             [date, cheats, comments, training, currentTime, id, userId]
           );
         } else {
-          // Get the user's internal ID first
-          const [userResult] = await db.query(
-            `SELECT id FROM apiUsers WHERE clerkId = ?`,
-            [userId]
-          );
-
-          if (!userResult.length) {
-            reject(new Error("User not found"));
-            return;
-          }
-
-          const internalUserId = userResult[0].id;
-
           // Get the next timeline number
           const [timelineResult] = await db.query(
             `SELECT COALESCE(MAX(timeline), 0) + 1 as nextTimeline FROM checkIns WHERE userId = ?`,
-            [internalUserId]
+            [userId]
           );
 
           const nextTimeline = timelineResult[0].nextTimeline;
@@ -419,7 +406,7 @@ const checkInFunctions = {
                 cc.comment,
                 au.name
             FROM checkInsCommentary cc
-            LEFT JOIN apiUsers au ON au.id = cc.userId
+            LEFT JOIN users au ON au.id = cc.userId
             WHERE cc.checkInId = ?
             ORDER BY cc.date DESC
           `,
@@ -433,7 +420,7 @@ const checkInFunctions = {
     });
   },
 
-  async insertCheckInComment(checkInId, clerkId, comment) {
+  async insertCheckInComment(checkInId, userId, comment) {
     return new Promise(async function (resolve, reject) {
       try {
         const currentDate = new Date();
@@ -442,18 +429,13 @@ const checkInFunctions = {
             INSERT INTO checkInsCommentary (checkInId, userId, comment, date)
             VALUES (?, ?, ?, ?)
           `,
-          [checkInId, clerkId, comment, currentDate]
-        );
-
-        const userId = await db.query(
-          `SELECT id FROM apiUsers WHERE clerkId = ?`,
-          [clerkId]
+          [checkInId, userId, comment, currentDate]
         );
 
         resolve({
           id: result.insertId,
           checkInId: checkInId,
-          userId: userId[0].id,
+          userId: userId,
           comment: comment,
           date: currentDate,
         });

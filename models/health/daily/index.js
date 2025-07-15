@@ -32,7 +32,7 @@ const logFunctions = {
         FROM weightLogs log
         LEFT JOIN sleepLogs slp 
             ON slp.date = log.date AND slp.userId = log.userId
-        LEFT JOIN apiUsers api 
+        LEFT JOIN users api 
             ON api.id = log.userId
         LEFT JOIN dietLogs dlog
             on dlog.effectiveDate = (
@@ -66,7 +66,7 @@ const logFunctions = {
         FROM sleepLogs slp
         LEFT JOIN weightLogs log 
             ON log.date = slp.date AND log.userId = slp.userId
-        LEFT JOIN apiUsers api 
+        LEFT JOIN users api 
             ON api.id = slp.userId
         LEFT JOIN dietLogs dlog
             on dlog.effectiveDate = (
@@ -92,7 +92,7 @@ const logFunctions = {
         await db.query(
           `
           INSERT INTO weightLogs (date, userId, weight)
-          VALUES (?, (select id from apiUsers where clerkId = ?), ?)
+          VALUES (?, ?, ?)
           ON DUPLICATE KEY UPDATE weight = VALUES(weight)
         `,
           [date, userId, weight]
