@@ -186,17 +186,10 @@ const logFunctions = {
         );
 
         if (!existing.length) {
-          // get correct userId
-          const [user] = await db.query(
-            `select id from apiUsers where clerkId = ?`,
-            [userId]
-          );
-
-          const oldUserId = user[0].id;
           const result = await axios.post(
             "https://4apzgqqogvz2v5cduanzxtoyea0rupfx.lambda-url.us-east-2.on.aws/",
             {
-              userId: oldUserId,
+              userId: userId,
               date: date,
               lambdaKey: config.ouraIntegrationApiKey,
             }
