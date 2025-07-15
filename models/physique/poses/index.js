@@ -29,7 +29,7 @@ const poseAnalysis = {
           `
             INSERT INTO physiquePoseClassification 
             (userId, poseId, s3Filename)
-            VALUES ((select id from apiUsers where clerkId = ?), ?, ?)
+            VALUES (?, ?, ?)
           `,
           [userId, poseId, s3Filename]
         );
@@ -78,7 +78,7 @@ const poseAnalysis = {
           `INSERT INTO poseClassificationModelsCalls (modelId, userId, isTraining)
         VALUES (
           (SELECT MAX(id) FROM poseClassificationModels),
-          (SELECT id FROM apiUsers WHERE clerkId = ?),
+          ?,
           ?
         )`,
           [userId, isTraining]

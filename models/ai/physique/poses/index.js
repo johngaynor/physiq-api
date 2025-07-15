@@ -9,7 +9,7 @@ const poseFunctions = {
           select
             id,
             case
-                when userId = (select id from apiUsers where clerkId = ?) then s3Filename
+                when userId = ? then s3Filename
                 else null
                 end 
             as s3Filename,
@@ -30,7 +30,7 @@ const poseFunctions = {
             from checkInsAttachments chk
             left join checkIns c
                 on c.id = chk.checkInId
-            where c.userId = (select id from apiUsers where clerkId = ?)
+            where c.userId = ?
             `,
           [userId]
         );

@@ -19,7 +19,7 @@ const dietFunctions = {
             water, 
             steps
         from dietLogs
-        where userId = (select id from apiUsers where clerkId = ?)
+        where userId = ?
         order by effectiveDate desc
         limit 1;
           `,

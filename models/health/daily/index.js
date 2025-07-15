@@ -110,7 +110,7 @@ const logFunctions = {
         await db.query(
           `
           INSERT INTO weightLogs (date, userId, steps)
-          VALUES (?, (select id from apiUsers where clerkId = ?), ?)
+          VALUES (?, ?, ?)
           ON DUPLICATE KEY UPDATE steps = VALUES(steps)
         `,
           [date, userId, steps]
@@ -128,7 +128,7 @@ const logFunctions = {
         await db.query(
           `
           INSERT INTO weightLogs (date, userId, bodyfat, bodyfatSource)
-          VALUES (?, (select id from apiUsers where clerkId = ?), ?, 1)
+          VALUES (?, ?, ?, 1)
           ON DUPLICATE KEY UPDATE bodyfat = VALUES(bodyfat), bodyfatSource = 1
         `,
           [date, userId, bodyfat]
@@ -146,7 +146,7 @@ const logFunctions = {
         await db.query(
           `
           INSERT INTO weightLogs (date, userId, water)
-          VALUES (?, (select id from apiUsers where clerkId = ?), ?)
+          VALUES (?, ?, ?)
           ON DUPLICATE KEY UPDATE water = VALUES(water)
         `,
           [date, userId, water]
@@ -164,7 +164,7 @@ const logFunctions = {
         await db.query(
           `
           INSERT INTO weightLogs (date, userId, calories)
-          VALUES (?, (select id from apiUsers where clerkId = ?), ?)
+          VALUES (?, ?, ?)
           ON DUPLICATE KEY UPDATE calories = VALUES(calories)
         `,
           [date, userId, calories]
@@ -180,7 +180,7 @@ const logFunctions = {
       try {
         const [existing] = await db.query(
           `
-          select * from sleepLogs where userId = (select id from apiUsers where clerkId = ?) and date = ?
+          select * from sleepLogs where userId = ? and date = ?
           `,
           [userId, date]
         );

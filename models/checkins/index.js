@@ -14,7 +14,7 @@ const checkInFunctions = {
                ci.training,
                ci.timeline
            FROM checkIns ci
-           WHERE ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+           WHERE ci.userId = ?
            ORDER BY ci.date DESC
         `,
           [userId]
@@ -34,7 +34,7 @@ const checkInFunctions = {
         const [checkInExists] = await db.query(
           `
             SELECT id FROM checkIns 
-            WHERE id = ? AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+            WHERE id = ? AND userId = ?
           `,
           [checkInId, userId]
         );
@@ -134,7 +134,7 @@ const checkInFunctions = {
                 training = ?,
                 recentSubmitTime = ?
               WHERE id = ?
-              AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+              AND userId = ?
             `,
             [date, cheats, comments, training, currentTime, id, userId]
           );
@@ -222,7 +222,7 @@ const checkInFunctions = {
             FROM checkInsAttachments att
             INNER JOIN checkIns ci ON ci.id = att.checkInId
             WHERE att.checkInId = ? 
-              AND ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+              AND ci.userId = ?
           `,
           [checkInId, userId]
         );
@@ -265,7 +265,7 @@ const checkInFunctions = {
         const [result] = await db.query(
           `
             DELETE FROM checkIns
-            WHERE userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+            WHERE userId = ?
               AND id = ?
           `,
           [userId, checkInId]
@@ -296,7 +296,7 @@ const checkInFunctions = {
             FROM checkInsAttachments att
             INNER JOIN checkIns ci ON ci.id = att.checkInId
             WHERE att.checkInId = ? 
-              AND ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+              AND ci.userId = ?
           `,
           [checkInId, userId]
         );
@@ -306,7 +306,7 @@ const checkInFunctions = {
           const [checkInExists] = await db.query(
             `
               SELECT id FROM checkIns 
-              WHERE id = ? AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+              WHERE id = ? AND userId = ?
             `,
             [checkInId, userId]
           );
@@ -385,7 +385,7 @@ const checkInFunctions = {
             INNER JOIN checkIns ci ON ci.id = att.checkInId
             SET att.poseId = ?
             WHERE att.id = ? 
-              AND ci.userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+              AND ci.userId = ?
           `,
           [poseId, attachmentId, userId]
         );
@@ -440,7 +440,7 @@ const checkInFunctions = {
         const [result] = await db.query(
           `
             INSERT INTO checkInsCommentary (checkInId, userId, comment, date)
-            VALUES (?, (select id from apiUsers where clerkId = ?), ?, ?)
+            VALUES (?, ?, ?, ?)
           `,
           [checkInId, clerkId, comment, currentDate]
         );

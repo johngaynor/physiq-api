@@ -20,7 +20,7 @@ const dietFunctions = {
                 steps,
                 phase
             FROM dietLogs
-            WHERE userId = (select id from apiUsers where clerkId = ?)
+            WHERE userId = ?
         `,
           [userId]
         );
@@ -40,7 +40,7 @@ const dietFunctions = {
                 on log.id = supp.logId
             left join supplements s
                 on s.id = supp.supplementId
-            WHERE log.userId = (select id from apiUsers where clerkId = ?)
+            WHERE log.userId = ?
           `,
           [userId]
         );
@@ -110,7 +110,7 @@ const dietFunctions = {
                 phase = ?,
                 recentSubmitTime = ?
               WHERE id = ?
-              AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+              AND userId = ?
             `,
             [
               protein,
@@ -173,7 +173,7 @@ const dietFunctions = {
                 recentSubmitTime
               )
               VALUES (
-                (SELECT id FROM apiUsers WHERE clerkId = ?),
+                ?,
                 ?,
                 ?,
                 ?,
@@ -245,7 +245,7 @@ const dietFunctions = {
                 phase
             FROM dietLogs
             WHERE id = ?
-              AND userId = (SELECT id FROM apiUsers WHERE clerkId = ?)
+              AND userId = ?
           `,
           [returnId, userId]
         );
@@ -280,7 +280,7 @@ const dietFunctions = {
         await db.query(
           `
             DELETE FROM dietLogs
-            WHERE userId = (select id from apiUsers where clerkId = ?)
+            WHERE userId = ?
               and id = ?
         `,
           [userId, logId]

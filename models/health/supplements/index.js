@@ -32,7 +32,7 @@ const supplementFunctions = {
             completed,
             reason
           FROM supplementsLogs
-          WHERE userId = (select id from apiUsers where clerkId = ?)
+          WHERE userId = ?
           `,
           [userId]
         );
@@ -50,7 +50,7 @@ const supplementFunctions = {
           await db.query(
             `
             INSERT INTO supplementsLogs (userId, date, supplementId, completed)
-            VALUES ((select id from apiUsers where clerkId = ?), ?, ?, ?)
+            VALUES (?, ?, ?, ?)
             `,
             [userId, date, supplementId, 1]
           );
@@ -59,7 +59,7 @@ const supplementFunctions = {
           await db.query(
             `
             DELETE FROM supplementsLogs
-            WHERE userId = (select id from apiUsers where clerkId = ?)
+            WHERE userId = ?
             AND date = ?
             AND supplementId = ?
             `,
