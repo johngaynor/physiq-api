@@ -53,7 +53,7 @@ const poseFunctions = {
         const [modelData] = await db.query(
           `
           SELECT id, versionNum, githubRepo, stack
-        FROM poseClassificationModelsCalls
+        FROM poseClassificationModels
         ORDER BY id DESC
         LIMIT 1;
           `
