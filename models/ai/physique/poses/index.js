@@ -35,7 +35,7 @@ const poseFunctions = {
           [userId]
         );
 
-        resolve({ trainingPhotos, checkInPhotos });
+        resolve([...trainingPhotos, ...checkInPhotos]);
       } catch (error) {
         reject(error);
       }
