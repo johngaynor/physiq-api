@@ -41,6 +41,32 @@ const poseFunctions = {
       }
     });
   },
+  async getModelData() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [[{ totalCalls }]] = await db.query(
+          `
+          select count(*) as totalCalls from poseClassificationModelsCalls;
+          `
+        );
+
+        const [modelData] = await db.query(
+          `
+          SELECT id, versionNum, githubRepo, stack
+        FROM poseClassificationModelsCalls
+        ORDER BY id DESC
+        LIMIT 1;
+          `
+        );
+
+        const model = modelData.length > 0 ? modelData[0] : null;
+
+        resolve({ totalCalls, model });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = poseFunctions;

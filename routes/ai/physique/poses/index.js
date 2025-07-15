@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const poseFunctions = require(".../../../models/ai/physique/poses");
+const poseFunctions = require("../../../../models/ai/physique/poses");
 
 router.get("/", async (req, res) => {
   try {
@@ -9,6 +9,19 @@ router.get("/", async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     console.error("Error in AI physique poses:", error);
+    res.status(500).json({
+      error: "Error processing request",
+    });
+  }
+});
+
+router.get("/model", async (req, res) => {
+  try {
+    const result = await poseFunctions.getModelData();
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in AI physique model calls:", error);
     res.status(500).json({
       error: "Error processing request",
     });
