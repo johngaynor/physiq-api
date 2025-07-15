@@ -1,12 +1,12 @@
 const router = require("express").Router();
+const poseFunctions = require(".../../../models/ai/physique/poses");
 
-// GET / - Simple route that doesn't do anything, will be used to get stats for training model
 router.get("/", async (req, res) => {
   try {
-    res.status(200).json({
-      success: true,
-      message: "AI physique poses endpoint",
-    });
+    const userId = req.auth.userId;
+
+    const result = await poseFunctions.getTrainingPhotos(userId);
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error in AI physique poses:", error);
     res.status(500).json({
