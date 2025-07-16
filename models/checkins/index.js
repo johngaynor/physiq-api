@@ -162,7 +162,7 @@ const checkInFunctions = {
               VALUES (?, ?, ?, ?, ?, ?, ?)
             `,
             [
-              internalUserId,
+              userId,
               date,
               cheats,
               comments,
