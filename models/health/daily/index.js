@@ -40,7 +40,7 @@ const logFunctions = {
                 FROM dietLogs
                 WHERE effectiveDate <= log.date AND userId = log.userId
             )
-        WHERE api.clerkId = ?
+        WHERE api.id = ?
         UNION
         SELECT 
             slp.date,
@@ -74,7 +74,7 @@ const logFunctions = {
                 FROM dietLogs
                 WHERE effectiveDate <= log.date AND userId = log.userId
             )
-        WHERE api.clerkId = ?
+        WHERE api.id = ?
           AND log.date IS NULL
         `,
           [userId, userId]
