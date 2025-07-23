@@ -7,8 +7,8 @@ const allFunctions = {
         const [result] = await db.query(
           `
           SELECT
-            id,
-            name,
+            apps.id,
+            apps.name,
             description,
             link
           FROM apps
