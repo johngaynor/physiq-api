@@ -6,4 +6,14 @@ router.get("/apps", async (req, res) => {
   res.status(200).json(result);
 });
 
+router.post("/user", async (req, res) => {
+  const { id, email, name } = req.body;
+  try {
+    const existed = await allFunctions.upsertUser(id, email, name);
+    res.status(200).json({ id, email, name, existed });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

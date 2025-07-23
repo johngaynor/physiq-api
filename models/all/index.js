@@ -21,6 +21,20 @@ const allFunctions = {
       }
     });
   },
+  async upsertUser(id, email, name) {
+    // Check if user exists
+    const [rows] = await db.query("SELECT id FROM users WHERE id = ?", [id]);
+    if (rows.length > 0) {
+      return true; // User existed
+    } else {
+      await db.query("INSERT INTO users (id, email, name) VALUES (?, ?, ?)", [
+        id,
+        email,
+        name,
+      ]);
+      return false; // User inserted
+    }
+  },
 };
 
 module.exports = allFunctions;
