@@ -7,7 +7,7 @@ router.get("/apps", async (req, res) => {
   res.status(200).json(result);
 });
 
-router.post("/user", async (req, res) => {
+router.post("/session", async (req, res) => {
   const { id, email, name } = req.body;
   try {
     // authenticate user
