@@ -2,7 +2,8 @@ const router = require("express").Router();
 const allFunctions = require("../../models/all");
 
 router.get("/apps", async (req, res) => {
-  const result = await allFunctions.getApps();
+  const userId = req.auth.userId;
+  const result = await allFunctions.getApps(userId);
   res.status(200).json(result);
 });
 

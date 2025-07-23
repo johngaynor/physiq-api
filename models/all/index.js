@@ -1,7 +1,7 @@
 const db = require("../../config/database");
 
 const allFunctions = {
-  async getApps() {
+  async getApps(userId) {
     return new Promise(async function (resolve, reject) {
       try {
         const [result] = await db.query(
@@ -12,8 +12,15 @@ const allFunctions = {
             description,
             link
           FROM apps
-          WHERE physiq = 1;
-          `
+          left join usersApps 
+            on apps.id = usersApps.appId and usersApps.userId = ?
+          left join users
+            on users.id = usersApps.userId
+          where users.admin = 1
+            or usersApps.id is not null
+            or apps.allUsers = 1
+          `,
+          [userId]
         );
         resolve(result);
       } catch (error) {
