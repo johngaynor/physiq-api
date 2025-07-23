@@ -10,8 +10,12 @@ router.get("/apps", async (req, res) => {
 router.post("/user", async (req, res) => {
   const { id, email, name } = req.body;
   try {
+    // authenticate user
     const existed = await allFunctions.upsertUser(id, email, name);
-    res.status(200).json({ id, email, name, existed });
+
+    // get apps for user
+    const apps = await allFunctions.getApps(id);
+    res.status(200).json({ user: { id, email, name }, existed, apps });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
