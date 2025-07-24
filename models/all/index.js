@@ -1,26 +1,18 @@
 const db = require("../../config/database");
 
 const allFunctions = {
-  async getApps(userId) {
+  async getApps() {
     return new Promise(async function (resolve, reject) {
       try {
         const [result] = await db.query(
           `
           SELECT
-            apps.id,
-            apps.name,
+            id,
+            name,
             description,
             link
           FROM apps
-          left join usersApps 
-            on apps.id = usersApps.appId and usersApps.userId = ?
-          left join users
-            on users.id = usersApps.userId
-          where users.admin = 1
-            or usersApps.id is not null
-            or apps.allUsers = 1
-          `,
-          [userId]
+          `
         );
         resolve(result);
       } catch (error) {

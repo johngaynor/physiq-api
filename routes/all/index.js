@@ -3,7 +3,7 @@ const allFunctions = require("../../models/all");
 
 router.get("/apps", async (req, res) => {
   const userId = req.auth.userId;
-  const result = await allFunctions.getApps(userId);
+  const result = await allFunctions.getApps();
   res.status(200).json(result);
 });
 
