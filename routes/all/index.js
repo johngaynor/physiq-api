@@ -6,6 +6,11 @@ router.get("/apps", async (req, res) => {
   res.status(200).json(result);
 });
 
+router.get("/users", async (req, res) => {
+  const result = await allFunctions.getUsers();
+  res.status(200).json(result);
+});
+
 router.post("/session", async (req, res) => {
   const { id, email, name } = req.body;
   try {

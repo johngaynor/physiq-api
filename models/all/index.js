@@ -20,6 +20,24 @@ const allFunctions = {
       }
     });
   },
+  async getUsers() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [result] = await db.query(
+          `
+          SELECT
+            id,
+            email,
+            name
+          FROM users
+          `
+        );
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
   async upsertUser(id, email, name) {
     // Check if user exists
     const [rows] = await db.query("SELECT id FROM users WHERE id = ?", [id]);
