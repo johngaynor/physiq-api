@@ -4,7 +4,7 @@ const supplementFunctions = {
   async getSupplements() {
     return new Promise(async function (resolve, reject) {
       try {
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
           SELECT
             id,
@@ -24,7 +24,7 @@ const supplementFunctions = {
   async getSupplementLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
           SELECT
             supplementId,
@@ -47,7 +47,7 @@ const supplementFunctions = {
       try {
         if (checked) {
           // insert
-          await db.query(
+          await db.pool.query(
             `
             INSERT INTO supplementsLogs (userId, date, supplementId, completed)
             VALUES (?, ?, ?, ?)
@@ -56,7 +56,7 @@ const supplementFunctions = {
           );
         } else {
           // delete
-          await db.query(
+          await db.pool.query(
             `
             DELETE FROM supplementsLogs
             WHERE userId = ?

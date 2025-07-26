@@ -4,7 +4,7 @@ const dietFunctions = {
   async getDietLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [dietLogs] = await db.query(
+        const [dietLogs] = await db.pool.query(
           `
             SELECT
                 id,
@@ -25,7 +25,7 @@ const dietFunctions = {
           [userId]
         );
 
-        const [supplements] = await db.query(
+        const [supplements] = await db.pool.query(
           `
             SELECT
                 supp.id,
@@ -93,7 +93,7 @@ const dietFunctions = {
         // update existing
         if (id) {
           // update main table
-          await db.query(
+          await db.pool.query(
             `
               UPDATE dietLogs
               SET
@@ -130,7 +130,7 @@ const dietFunctions = {
             ]
           );
           // delete existing supplements
-          await db.query(
+          await db.pool.query(
             `
               DELETE FROM dietLogsSupplements
               WHERE logId = ?
@@ -145,7 +145,7 @@ const dietFunctions = {
               supp.dosage,
               supp.frequency,
             ]);
-            await db.query(
+            await db.pool.query(
               `
                 INSERT INTO dietLogsSupplements (logId, supplementId, dosage, frequency)
                 VALUES ?
@@ -155,7 +155,7 @@ const dietFunctions = {
           }
         } else {
           // insert
-          const [result] = await db.query(
+          const [result] = await db.pool.query(
             `
               INSERT INTO dietLogs (
                 userId,
@@ -215,7 +215,7 @@ const dietFunctions = {
               supp.dosage,
               supp.frequency,
             ]);
-            await db.query(
+            await db.pool.query(
               `
                 INSERT INTO dietLogsSupplements (logId, supplementId, dosage, frequency)
                 VALUES ?
@@ -228,7 +228,7 @@ const dietFunctions = {
         }
 
         // get created/updated log and corresponding supplements
-        const [log] = await db.query(
+        const [log] = await db.pool.query(
           `
             SELECT
                 id,
@@ -249,7 +249,7 @@ const dietFunctions = {
           `,
           [returnId, userId]
         );
-        const [newSupplements] = await db.query(
+        const [newSupplements] = await db.pool.query(
           `
             SELECT
                 supp.id,
@@ -277,7 +277,7 @@ const dietFunctions = {
   async deleteDietLog(userId, logId) {
     return new Promise(async function (resolve, reject) {
       try {
-        await db.query(
+        await db.pool.query(
           `
             DELETE FROM dietLogs
             WHERE userId = ?

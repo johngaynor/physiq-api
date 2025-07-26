@@ -4,7 +4,7 @@ const checkInFunctions = {
   async getCheckIns(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [checkIns] = await db.query(
+        const [checkIns] = await db.pool.query(
           `
            SELECT
                ci.id,
@@ -31,7 +31,7 @@ const checkInFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         // First verify the check-in belongs to the user
-        const [checkInExists] = await db.query(
+        const [checkInExists] = await db.pool.query(
           `
             SELECT id FROM checkIns 
             WHERE id = ? AND userId = ?
@@ -49,7 +49,7 @@ const checkInFunctions = {
         }
 
         // Get attachments for the check-in
-        const [attachments] = await db.query(
+        const [attachments] = await db.pool.query(
           `
             SELECT
                 att.id,
@@ -124,7 +124,7 @@ const checkInFunctions = {
         // update existing
         if (id) {
           // update main table with recentSubmitTime
-          await db.query(
+          await db.pool.query(
             `
               UPDATE checkIns
               SET
@@ -140,7 +140,7 @@ const checkInFunctions = {
           );
         } else {
           // Get the next timeline number
-          const [timelineResult] = await db.query(
+          const [timelineResult] = await db.pool.query(
             `SELECT COALESCE(MAX(timeline), 0) + 1 as nextTimeline FROM checkIns WHERE userId = ?`,
             [userId]
           );
@@ -148,7 +148,7 @@ const checkInFunctions = {
           const nextTimeline = timelineResult[0].nextTimeline;
 
           // Insert new check-in with recentSubmitTime
-          const [result] = await db.query(
+          const [result] = await db.pool.query(
             `
               INSERT INTO checkIns (
                 userId,
@@ -182,7 +182,7 @@ const checkInFunctions = {
               att.s3Filename,
               att.poseId,
             ]);
-            await db.query(
+            await db.pool.query(
               `
                 INSERT INTO checkInsAttachments (checkInId, s3Filename, poseId)
                 VALUES ?
@@ -203,7 +203,7 @@ const checkInFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         // First get all S3 filenames for this check-in so we can delete them from S3
-        const [attachments] = await db.query(
+        const [attachments] = await db.pool.query(
           `
             SELECT att.s3Filename
             FROM checkInsAttachments att
@@ -240,7 +240,7 @@ const checkInFunctions = {
         }
 
         // Delete attachments from database (due to foreign key constraint)
-        await db.query(
+        await db.pool.query(
           `
             DELETE FROM checkInsAttachments
             WHERE checkInId = ?
@@ -249,7 +249,7 @@ const checkInFunctions = {
         );
 
         // Delete the check-in
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
             DELETE FROM checkIns
             WHERE userId = ?
@@ -277,7 +277,7 @@ const checkInFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         // Verify the check-in belongs to the user and get photos
-        const [photos] = await db.query(
+        const [photos] = await db.pool.query(
           `
             SELECT att.id, att.s3Filename, att.poseId
             FROM checkInsAttachments att
@@ -290,7 +290,7 @@ const checkInFunctions = {
 
         if (!photos.length) {
           // Check if check-in exists but has no photos
-          const [checkInExists] = await db.query(
+          const [checkInExists] = await db.pool.query(
             `
               SELECT id FROM checkIns 
               WHERE id = ? AND userId = ?
@@ -366,7 +366,7 @@ const checkInFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         // Update the attachment's poseId (with user authorization check)
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
             UPDATE checkInsAttachments att
             INNER JOIN checkIns ci ON ci.id = att.checkInId
@@ -396,7 +396,7 @@ const checkInFunctions = {
   async getCheckInComments(checkInId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [comments] = await db.query(
+        const [comments] = await db.pool.query(
           `
             SELECT
                 cc.id,
@@ -424,7 +424,7 @@ const checkInFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const currentDate = new Date();
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
             INSERT INTO checkInsCommentary (checkInId, userId, comment, date)
             VALUES (?, ?, ?, ?)

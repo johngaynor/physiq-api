@@ -6,7 +6,7 @@ const poseAnalysis = {
   async getPoses() {
     return new Promise(async function (resolve, reject) {
       try {
-        const [poses] = await db.query(
+        const [poses] = await db.pool.query(
           `
             SELECT
                 id,
@@ -25,7 +25,7 @@ const poseAnalysis = {
   async assignPose(userId, poseId, s3Filename) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
             INSERT INTO physiquePoseClassification 
             (userId, poseId, s3Filename)
@@ -74,7 +74,7 @@ const poseAnalysis = {
         );
 
         // insert logs
-        await db.query(
+        await db.pool.query(
           `INSERT INTO poseClassificationModelsCalls (modelId, userId, isTraining)
         VALUES (
           (SELECT MAX(id) FROM poseClassificationModels),

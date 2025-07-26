@@ -4,7 +4,7 @@ const poseFunctions = {
   async getTrainingPhotos(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [trainingPhotos] = await db.query(
+        const [trainingPhotos] = await db.pool.query(
           `
           select
             id,
@@ -20,7 +20,7 @@ const poseFunctions = {
           [userId]
         );
 
-        const [checkInPhotos] = await db.query(
+        const [checkInPhotos] = await db.pool.query(
           `
             select
             chk.id,
@@ -44,13 +44,13 @@ const poseFunctions = {
   async getModelData() {
     return new Promise(async function (resolve, reject) {
       try {
-        const [[{ totalCalls }]] = await db.query(
+        const [[{ totalCalls }]] = await db.pool.query(
           `
           select count(*) as totalCalls from poseClassificationModelsCalls;
           `
         );
 
-        const [modelData] = await db.query(
+        const [modelData] = await db.pool.query(
           `
           SELECT id, versionNum, githubRepo, stack
         FROM poseClassificationModels

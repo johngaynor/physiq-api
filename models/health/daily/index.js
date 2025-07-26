@@ -6,7 +6,7 @@ const logFunctions = {
   async getDailyLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
         SELECT 
             log.date,
@@ -89,7 +89,7 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, weight } = values;
-        await db.query(
+        await db.pool.query(
           `
           INSERT INTO weightLogs (date, userId, weight)
           VALUES (?, ?, ?)
@@ -107,7 +107,7 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, steps } = values;
-        await db.query(
+        await db.pool.query(
           `
           INSERT INTO weightLogs (date, userId, steps)
           VALUES (?, ?, ?)
@@ -125,7 +125,7 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, bodyfat } = values;
-        await db.query(
+        await db.pool.query(
           `
           INSERT INTO weightLogs (date, userId, bodyfat, bodyfatSource)
           VALUES (?, ?, ?, 1)
@@ -143,7 +143,7 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, water } = values;
-        await db.query(
+        await db.pool.query(
           `
           INSERT INTO weightLogs (date, userId, water)
           VALUES (?, ?, ?)
@@ -161,7 +161,7 @@ const logFunctions = {
     return new Promise(async function (resolve, reject) {
       try {
         const { date, calories } = values;
-        await db.query(
+        await db.pool.query(
           `
           INSERT INTO weightLogs (date, userId, calories)
           VALUES (?, ?, ?)
@@ -178,7 +178,7 @@ const logFunctions = {
   async getDailySleepOura(userId, date) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [existing] = await db.query(
+        const [existing] = await db.pool.query(
           `
           select * from sleepLogs where userId = ? and date = ?
           `,

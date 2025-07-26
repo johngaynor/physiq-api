@@ -3,29 +3,6 @@ const config = require("./index");
 
 const pool = mysql.createPool(config.mySQLConfig);
 
-pool
-  .getConnection()
-  .then((conn) => {
-    console.log(`Connected to ${config.mySQLConfig.database} Database`);
-    conn.release();
-  })
-  .catch((err) => {
-    console.error("Initial MySQL connection failed:", err);
-  });
-
-// async function query(query, params = []) {
-//   const connection = await pool.getConnection();
-//   try {
-//     await connection.ping(); // optional but helps detect stale sockets
-//     return await connection.query(query, params);
-//   } catch (err) {
-//     console.error("Query failed:", err);
-//     throw err;
-//   } finally {
-//     connection.release();
-//   }
-// }
-
 async function query(sql, params = []) {
   const connection = await mysql.createConnection(config.mySQLConfig);
   try {
@@ -38,4 +15,4 @@ async function query(sql, params = []) {
   }
 }
 
-module.exports = { pool, query };
+module.exports = { query, pool };

@@ -4,7 +4,7 @@ const dietFunctions = {
   async getLatestDiet(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
           select
             id,
@@ -34,7 +34,7 @@ const dietFunctions = {
   async getLatestDietSupplements(logId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [result] = await db.query(
+        const [result] = await db.pool.query(
           `
           select
             id,
