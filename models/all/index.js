@@ -10,7 +10,9 @@ const allFunctions = {
             id,
             name,
             description,
-            link
+            link,
+            allUsers,
+            restricted
           FROM apps
           `
         );
