@@ -13,16 +13,24 @@ router.get("/users", async (req, res) => {
 
 router.post("/session", async (req, res) => {
   const { id, email, name } = req.body;
-  try {
-    // authenticate user
-    const existed = await allFunctions.upsertUser(id, email, name);
+  // authenticate user
+  const existed = await allFunctions.upsertUser(id, email, name);
 
-    // get apps for user
-    const apps = await allFunctions.getApps(id);
-    res.status(200).json({ user: { id, email, name }, existed, apps });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  // get apps for user
+  const apps = await allFunctions.getUserAccess(id);
+  res.status(200).json({ user: { id, email, name, apps }, existed });
+});
+
+router.get("/app/access/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  const result = await allFunctions.getUserAccess(userId);
+  res.status(200).json(result);
+});
+
+router.post("/app/access", async (req, res) => {
+  const { userId, app, checked } = req.body;
+  const result = await allFunctions.updateAppAccess(userId, app.id, checked);
+  res.status(200).json({ success: result });
 });
 
 module.exports = router;
