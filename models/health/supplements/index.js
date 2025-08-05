@@ -73,6 +73,24 @@ const supplementFunctions = {
       }
     });
   },
+  async getSupplementTags() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [result] = await db.pool.query(
+          `
+          SELECT
+            id,
+            name
+          FROM supplementsTagsOptions
+          ORDER BY name ASC
+          `
+        );
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = supplementFunctions;

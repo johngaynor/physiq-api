@@ -24,4 +24,10 @@ router.post("/logs", async (req, res) => {
   });
   res.status(200).json("Success");
 });
+
+router.get("/tags", async (req, res) => {
+  const result = await supplementFunctions.getSupplementTags();
+  res.status(200).json(result);
+});
+
 module.exports = router;
