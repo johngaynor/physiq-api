@@ -4,7 +4,8 @@ const supplementFunctions = {
   async getSupplements() {
     return new Promise(async function (resolve, reject) {
       try {
-        const [result] = await db.pool.query(
+        // Get supplements
+        const [supplements] = await db.pool.query(
           `
           SELECT
             id,
@@ -12,10 +13,41 @@ const supplementFunctions = {
             description
           FROM supplements
           WHERE active = 1
-          order by id DESC
+          ORDER BY id DESC
           `
         );
-        resolve(result);
+
+        // Get tags for each supplement
+        const [tags] = await db.pool.query(
+          `
+          SELECT
+            st.supplementId,
+            sto.id as tagId,
+            sto.name as tagName
+          FROM supplementsTags st
+          JOIN supplementsTagsOptions sto ON st.tagId = sto.id
+          `
+        );
+
+        // Group tags by supplementId
+        const tagsBySupplementId = {};
+        tags.forEach((tag) => {
+          if (!tagsBySupplementId[tag.supplementId]) {
+            tagsBySupplementId[tag.supplementId] = [];
+          }
+          tagsBySupplementId[tag.supplementId].push({
+            id: tag.tagId,
+            name: tag.tagName,
+          });
+        });
+
+        // Add tags to each supplement
+        const supplementsWithTags = supplements.map((supplement) => ({
+          ...supplement,
+          tags: tagsBySupplementId[supplement.id] || [],
+        }));
+
+        resolve(supplementsWithTags);
       } catch (error) {
         reject(error);
       }
