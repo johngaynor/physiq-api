@@ -165,6 +165,48 @@ const supplementFunctions = {
       }
     });
   },
+  async createSupplementTag(name) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        if (!name) {
+          throw new Error("Missing tag name");
+        }
+
+        const [result] = await db.pool.query(
+          `
+          INSERT INTO supplementsTagsOptions (name)
+          VALUES (?)
+          `,
+          [name]
+        );
+
+        resolve(result.insertId);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async deleteSupplementTag(id) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        if (!id) {
+          throw new Error("Missing tag id");
+        }
+
+        await db.pool.query(
+          `
+          DELETE FROM supplementsTagsOptions
+          WHERE id = ?
+          `,
+          [id]
+        );
+
+        resolve("success");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = supplementFunctions;

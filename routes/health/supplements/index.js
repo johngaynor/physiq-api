@@ -30,7 +30,27 @@ router.get("/tags", async (req, res) => {
   res.status(200).json(result);
 });
 
-router.post("/tags", async (req, res) => {
+router.post("/tag", async (req, res) => {
+  const { name } = req.body;
+  try {
+    const newTagId = await supplementFunctions.createSupplementTag(name);
+    res.status(200).json({ success: true, id: newTagId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete("/tag", async (req, res) => {
+  const { id } = req.body;
+  try {
+    await supplementFunctions.deleteSupplementTag(id);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/supplement/tag", async (req, res) => {
   const { supplementId, tagId } = req.body;
   try {
     await supplementFunctions.assignSupplementTag(supplementId, tagId);
@@ -40,7 +60,7 @@ router.post("/tags", async (req, res) => {
   }
 });
 
-router.delete("/tags", async (req, res) => {
+router.delete("/supplement/tag", async (req, res) => {
   const { supplementId, tagId } = req.body;
   try {
     await supplementFunctions.removeSupplementTag(supplementId, tagId);
