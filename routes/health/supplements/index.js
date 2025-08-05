@@ -30,4 +30,14 @@ router.get("/tags", async (req, res) => {
   res.status(200).json(result);
 });
 
+router.post("/tags", async (req, res) => {
+  const { supplementId, tagId } = req.body;
+  try {
+    await supplementFunctions.assignSupplementTag(supplementId, tagId);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

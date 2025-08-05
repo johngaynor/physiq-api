@@ -123,6 +123,27 @@ const supplementFunctions = {
       }
     });
   },
+  async assignSupplementTag(supplementId, tagId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        if (!supplementId || !tagId) {
+          throw new Error("Missing supplementId or tagId");
+        }
+
+        await db.pool.query(
+          `
+          INSERT INTO supplementsTags (supplementId, tagId)
+          VALUES (?, ?)
+          `,
+          [supplementId, tagId]
+        );
+
+        resolve("success");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = supplementFunctions;
