@@ -40,4 +40,14 @@ router.post("/tags", async (req, res) => {
   }
 });
 
+router.delete("/tags", async (req, res) => {
+  const { supplementId, tagId } = req.body;
+  try {
+    await supplementFunctions.removeSupplementTag(supplementId, tagId);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

@@ -144,6 +144,27 @@ const supplementFunctions = {
       }
     });
   },
+  async removeSupplementTag(supplementId, tagId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        if (!supplementId || !tagId) {
+          throw new Error("Missing supplementId or tagId");
+        }
+
+        await db.pool.query(
+          `
+          DELETE FROM supplementsTags
+          WHERE supplementId = ? AND tagId = ?
+          `,
+          [supplementId, tagId]
+        );
+
+        resolve("success");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = supplementFunctions;
