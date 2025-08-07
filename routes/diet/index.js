@@ -14,6 +14,22 @@ router.post("/log", async (req, res) => {
   res.status(200).json(result);
 });
 
+router.get("/log/latest", async (req, res) => {
+  const userId = req.auth.userId;
+  const logs = await dietFunctions.getLatestDiet(userId);
+
+  if (!logs.length) {
+    res.status(200).json({ log: {}, supplements: [] });
+    return;
+  }
+
+  const log = logs[0];
+
+  const supplements = await dietFunctions.getLatestDietSupplements(log.id);
+
+  res.status(200).json({ log, supplements });
+});
+
 router.delete("/log/:id", async (req, res) => {
   const userId = req.auth.userId;
   const logId = req.params.id;
