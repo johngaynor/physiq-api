@@ -76,21 +76,21 @@ router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
     const uploadedFiles = req.files || [];
     const uploadedFileKeys = uploadedFiles.map((file) => file.key);
 
-    async function getPose(filename) {
-      const blob = await getFileAsBlob(process.env.CHECKIN_BUCKET, filename);
-      const result = await poseAnalysis.analyzePose({
-        fileBuffer: blob.buffer,
-        filename,
-        mimetype: blob.mimetype,
-        isTraining: 0,
-        userId,
-      });
-      return result;
-    }
+    // async function getPose(filename) {
+    //   const blob = await getFileAsBlob(process.env.CHECKIN_BUCKET, filename);
+    //   const result = await poseAnalysis.analyzePose({
+    //     fileBuffer: blob.buffer,
+    //     filename,
+    //     mimetype: blob.mimetype,
+    //     isTraining: 0,
+    //     userId,
+    //   });
+    //   return result;
+    // }
 
-    const analysisResults = await Promise.all(
-      uploadedFileKeys.map((filename) => getPose(filename))
-    );
+    // const analysisResults = await Promise.all(
+    //   uploadedFileKeys.map((filename) => getPose(filename))
+    // );
 
     // Create/update the check-in with the uploaded file names
     const result = await checkInFunctions.editCheckIn(userId, {
@@ -101,9 +101,10 @@ router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
       training,
       attachments: uploadedFileKeys.map((filename) => ({
         s3Filename: filename,
-        poseId:
-          analysisResults.find((res) => res.filename === filename)?.prediction
-            ?.predicted_class_id || null,
+        poseId: null,
+        // poseId:
+        //   analysisResults.find((res) => res.filename === filename)?.prediction
+        //     ?.predicted_class_id || null,
       })),
     });
 
