@@ -444,6 +444,25 @@ const checkInFunctions = {
       }
     });
   },
+
+  async getCoachEmail(userId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [result] = await db.pool.query(
+          `
+           select email from coachEmails where userId = ?
+        `,
+          [userId]
+        );
+        if (result.length === 0) {
+          resolve(null);
+          return;
+        } else resolve(result[0].coachEmail);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = checkInFunctions;

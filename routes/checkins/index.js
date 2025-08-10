@@ -227,10 +227,15 @@ router.post(
         return res.status(400).json({ error: "No file provided" });
       }
 
+      // get coach email
+      const email = await checkInFunctions.getCoachEmail(userId);
+      if (!email) {
+        return res.status(404).json({ error: "Coach email not found" });
+      }
+
       // Send email with attachment
       await sendEmail(
-        // "johngaynordev@gmail.com",
-        "wbeuliss@gmail.com",
+        email,
         "",
         "",
         `Gaynor Check-In - ${date}`,
