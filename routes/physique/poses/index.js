@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const canAccess = require("../../../models/middleware/canAccess");
 const poseAnalysis = require("../../../models/physique/poses");
 const { upload } = require("../../../config/awsConfig");
 
@@ -6,7 +7,7 @@ const { upload } = require("../../../config/awsConfig");
 const uploadPhotos = upload(process.env.POSE_CLASSIFICATION_BUCKET);
 
 // GET /poses - Get all available poses for check-ins
-router.get("/", async (req, res) => {
+router.get("/", canAccess([28, 34]), async (req, res) => {
   try {
     const poses = await poseAnalysis.getPoses();
     res.status(200).json(poses);
@@ -19,7 +20,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST /assign - Assign pose data
-router.post("/assign", async (req, res) => {
+router.post("/assign", canAccess(34), async (req, res) => {
   try {
     const userId = req.auth?.userId;
     const { filename, id } = req.body;
@@ -48,7 +49,7 @@ router.post("/assign", async (req, res) => {
 });
 
 // Upload file and forward to external API for pose analysis
-router.post("/analyze", uploadPhotos.single("file"), async (req, res) => {
+router.post("/analyze", canAccess(34), uploadPhotos.single("file"), async (req, res) => {
   try {
     const userId = req.auth?.userId;
 

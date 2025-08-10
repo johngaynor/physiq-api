@@ -1,7 +1,8 @@
 const router = require("express").Router();
+const canAccess = require("../../../../models/middleware/canAccess");
 const poseFunctions = require("../../../../models/ai/physique/poses");
 
-router.get("/", async (req, res) => {
+router.get("/", canAccess(34), async (req, res) => {
   try {
     const userId = req.auth.userId;
 
@@ -15,7 +16,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/model", async (req, res) => {
+router.get("/model", canAccess(34), async (req, res) => {
   try {
     const result = await poseFunctions.getModelData();
 

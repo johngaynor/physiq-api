@@ -1,18 +1,19 @@
 const router = require("express").Router();
+const canAccess = require("../../../models/middleware/canAccess");
 const supplementFunctions = require("../../../models/health/supplements");
 
-router.get("/", async (req, res) => {
+router.get("/", canAccess(29), async (req, res) => {
   const result = await supplementFunctions.getSupplements();
   res.status(200).json(result);
 });
 
-router.get("/logs", async (req, res) => {
+router.get("/logs", canAccess(29), async (req, res) => {
   const userId = req.auth.userId;
   const result = await supplementFunctions.getSupplementLogs(userId);
   res.status(200).json(result);
 });
 
-router.post("/logs", async (req, res) => {
+router.post("/logs", canAccess(29), async (req, res) => {
   const userId = req.auth.userId;
   const { date, supplementId, checked } = req.body;
 
@@ -25,12 +26,12 @@ router.post("/logs", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.get("/tags", async (req, res) => {
+router.get("/tags", canAccess(29), async (req, res) => {
   const result = await supplementFunctions.getSupplementTags();
   res.status(200).json(result);
 });
 
-router.post("/tag", async (req, res) => {
+router.post("/tag", canAccess(30), async (req, res) => {
   const { name } = req.body;
   try {
     const newTagId = await supplementFunctions.createSupplementTag(name);
@@ -40,7 +41,7 @@ router.post("/tag", async (req, res) => {
   }
 });
 
-router.delete("/tag", async (req, res) => {
+router.delete("/tag", canAccess(30), async (req, res) => {
   const { id } = req.body;
   try {
     await supplementFunctions.deleteSupplementTag(id);
@@ -50,7 +51,7 @@ router.delete("/tag", async (req, res) => {
   }
 });
 
-router.post("/supplement/tag", async (req, res) => {
+router.post("/supplement/tag", canAccess(30), async (req, res) => {
   const { supplementId, tagId } = req.body;
   try {
     await supplementFunctions.assignSupplementTag(supplementId, tagId);
@@ -60,7 +61,7 @@ router.post("/supplement/tag", async (req, res) => {
   }
 });
 
-router.delete("/supplement/tag", async (req, res) => {
+router.delete("/supplement/tag", canAccess(30), async (req, res) => {
   const { supplementId, tagId } = req.body;
   try {
     await supplementFunctions.removeSupplementTag(supplementId, tagId);

@@ -3,6 +3,7 @@ const checkInFunctions = require("../../models/checkins");
 const poseAnalysis = require("../../models/physique/poses");
 const { upload, getFileAsBlob } = require("../../config/awsConfig");
 const { sendEmail } = require("../../config/mail");
+const canAccess = require("../../models/middleware/canAccess");
 const multer = require("multer");
 
 // Create upload middleware for check-in photos
@@ -25,14 +26,14 @@ const localStorage = multer({
   },
 });
 
-router.get("/", async (req, res) => {
+router.get("/", canAccess(28), async (req, res) => {
   const userId = req.auth.userId;
   const result = await checkInFunctions.getCheckIns(userId);
   res.status(200).json(result);
 });
 
 // Get all check-in comments for a specific check-in
-router.get("/comments/:checkInId", async (req, res) => {
+router.get("/comments/:checkInId", canAccess(28), async (req, res) => {
   try {
     const { checkInId } = req.params;
     const result = await checkInFunctions.getCheckInComments(checkInId);
@@ -44,7 +45,7 @@ router.get("/comments/:checkInId", async (req, res) => {
 });
 
 // Insert a new comment for a specific check-in
-router.post("/comments", async (req, res) => {
+router.post("/comments", canAccess(28), async (req, res) => {
   try {
     const userId = req.auth.userId;
     const { checkInId, comment } = req.body;
@@ -67,80 +68,85 @@ router.post("/comments", async (req, res) => {
 });
 
 // Create or update check-in with optional photo upload
-router.post("/", uploadPhotos.array("images", 20), async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { id, date, cheats, comments, training } = req.body;
+router.post(
+  "/",
+  canAccess(28),
+  uploadPhotos.array("images", 20),
+  async (req, res) => {
+    try {
+      const userId = req.auth.userId;
+      const { id, date, cheats, comments, training } = req.body;
 
-    // Get uploaded files info from S3
-    const uploadedFiles = req.files || [];
-    const uploadedFileKeys = uploadedFiles.map((file) => file.key);
+      // Get uploaded files info from S3
+      const uploadedFiles = req.files || [];
+      const uploadedFileKeys = uploadedFiles.map((file) => file.key);
 
-    // async function getPose(filename) {
-    //   const blob = await getFileAsBlob(process.env.CHECKIN_BUCKET, filename);
-    //   const result = await poseAnalysis.analyzePose({
-    //     fileBuffer: blob.buffer,
-    //     filename,
-    //     mimetype: blob.mimetype,
-    //     isTraining: 0,
-    //     userId,
-    //   });
-    //   return result;
-    // }
+      // async function getPose(filename) {
+      //   const blob = await getFileAsBlob(process.env.CHECKIN_BUCKET, filename);
+      //   const result = await poseAnalysis.analyzePose({
+      //     fileBuffer: blob.buffer,
+      //     filename,
+      //     mimetype: blob.mimetype,
+      //     isTraining: 0,
+      //     userId,
+      //   });
+      //   return result;
+      // }
 
-    // const analysisResults = await Promise.all(
-    //   uploadedFileKeys.map((filename) => getPose(filename))
-    // );
+      // const analysisResults = await Promise.all(
+      //   uploadedFileKeys.map((filename) => getPose(filename))
+      // );
 
-    // Create/update the check-in with the uploaded file names
-    const result = await checkInFunctions.editCheckIn(userId, {
-      id,
-      date,
-      cheats,
-      comments,
-      training,
-      attachments: uploadedFileKeys.map((filename) => ({
-        s3Filename: filename,
-        poseId: null,
-        // poseId:
-        //   analysisResults.find((res) => res.filename === filename)?.prediction
-        //     ?.predicted_class_id || null,
-      })),
-    });
+      // Create/update the check-in with the uploaded file names
+      const result = await checkInFunctions.editCheckIn(userId, {
+        id,
+        date,
+        cheats,
+        comments,
+        training,
+        attachments: uploadedFileKeys.map((filename) => ({
+          s3Filename: filename,
+          poseId: null,
+          // poseId:
+          //   analysisResults.find((res) => res.filename === filename)?.prediction
+          //     ?.predicted_class_id || null,
+        })),
+      });
 
-    // add comment
-    await checkInFunctions.insertCheckInComment(
-      result.id,
-      userId,
-      id ? "Updated check-in" : "Original submission"
-    );
+      // add comment
+      await checkInFunctions.insertCheckInComment(
+        result.id,
+        userId,
+        id ? "Updated check-in" : "Original submission"
+      );
 
-    res.status(200).json({
-      ...result,
-      uploadedFiles: uploadedFileKeys,
-    });
-  } catch (error) {
-    console.error("Error creating/editing check-in:", error);
+      res.status(200).json({
+        ...result,
+        uploadedFiles: uploadedFileKeys,
+      });
+    } catch (error) {
+      console.error("Error creating/editing check-in:", error);
 
-    // Handle specific error types
-    if (
-      error.message?.includes("Invalid file type") ||
-      error.message?.includes("Only image files")
-    ) {
-      res
-        .status(400)
-        .json({ error: "Invalid file type. Only image files are allowed." });
-    } else if (error.message?.includes("File too large")) {
-      res
-        .status(400)
-        .json({ error: "File size too large. Maximum 10MB per file." });
-    } else {
-      res.status(500).json({ error: "Failed to create/edit check-in" });
+      // Handle specific error types
+      if (
+        error.message?.includes("Invalid file type") ||
+        error.message?.includes("Only image files")
+      ) {
+        res
+          .status(400)
+          .json({ error: "Invalid file type. Only image files are allowed." });
+      } else if (error.message?.includes("File too large")) {
+        res
+          .status(400)
+          .json({ error: "File size too large. Maximum 10MB per file." });
+      } else {
+        res.status(500).json({ error: "Failed to create/edit check-in" });
+      }
     }
   }
-});
+);
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", canAccess(28), async (req, res) => {
   try {
     const userId = req.auth.userId;
     const checkInId = req.params.id;
@@ -158,7 +164,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Get attachments for a specific check-in
-router.get("/attachments/:id", async (req, res) => {
+router.get("/attachments/:id", canAccess(28), async (req, res) => {
   try {
     const userId = req.auth.userId;
     const { id } = req.params;
@@ -176,7 +182,7 @@ router.get("/attachments/:id", async (req, res) => {
 });
 
 // Assign pose ID to a specific attachment
-router.post("/attachments/:id/pose", async (req, res) => {
+router.post("/attachments/:id/pose", canAccess(28), async (req, res) => {
   try {
     const userId = req.auth.userId;
     const attachmentId = req.params.id;
@@ -204,64 +210,69 @@ router.post("/attachments/:id/pose", async (req, res) => {
 });
 
 // Send PDF to coach via email
-router.post("/send", localStorage.single("file"), async (req, res) => {
-  try {
-    const { checkInId, date } = req.body;
-    const userId = req.auth.userId;
-
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ error: "No file provided" });
-    }
-
-    // Send email with attachment
-    await sendEmail(
-      // "johngaynordev@gmail.com",
-      "wbeuliss@gmail.com",
-      "",
-      "",
-      `Gaynor Check-In - ${date}`,
-      "",
-      req.file.path,
-      req.file.originalname
-    );
-
-    // Clean up temporary file
-    const fs = require("fs");
+router.post(
+  "/send",
+  canAccess(28),
+  localStorage.single("file"),
+  async (req, res) => {
     try {
-      fs.unlinkSync(req.file.path);
-    } catch (cleanupError) {
-      console.error("Error cleaning up temp file:", cleanupError);
-    }
+      const { checkInId, date } = req.body;
+      const userId = req.auth.userId;
 
-    // Add comment to check-in
-    if (checkInId && userId) {
-      await checkInFunctions.insertCheckInComment(
-        checkInId,
-        userId,
-        "Sent PDF to coach"
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
+
+      // Send email with attachment
+      await sendEmail(
+        // "johngaynordev@gmail.com",
+        "wbeuliss@gmail.com",
+        "",
+        "",
+        `Gaynor Check-In - ${date}`,
+        "",
+        req.file.path,
+        req.file.originalname
       );
-    }
 
-    res.status(200).json("success");
-  } catch (error) {
-    console.error("Error sending file to coach:", error);
-
-    // Clean up temp file in case of error
-    if (req.file) {
+      // Clean up temporary file
       const fs = require("fs");
       try {
         fs.unlinkSync(req.file.path);
       } catch (cleanupError) {
         console.error("Error cleaning up temp file:", cleanupError);
       }
-    }
 
-    res.status(400).json({ error });
+      // Add comment to check-in
+      if (checkInId && userId) {
+        await checkInFunctions.insertCheckInComment(
+          checkInId,
+          userId,
+          "Sent PDF to coach"
+        );
+      }
+
+      res.status(200).json("success");
+    } catch (error) {
+      console.error("Error sending file to coach:", error);
+
+      // Clean up temp file in case of error
+      if (req.file) {
+        const fs = require("fs");
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (cleanupError) {
+          console.error("Error cleaning up temp file:", cleanupError);
+        }
+      }
+
+      res.status(400).json({ error });
+    }
   }
-});
+);
 
 module.exports = router;

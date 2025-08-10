@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const canAccess = require("../../../models/middleware/canAccess");
 const logFunctions = require("../../../models/health/daily");
 
 router.get("/", async (req, res) => {
@@ -7,7 +8,7 @@ router.get("/", async (req, res) => {
   res.status(200).json(result);
 });
 
-router.post("/weight", async (req, res) => {
+router.post("/weight", canAccess(15), async (req, res) => {
   const userId = req.auth.userId;
   const { weight, date } = req.body;
 
@@ -15,7 +16,7 @@ router.post("/weight", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.post("/steps", async (req, res) => {
+router.post("/steps", canAccess(14), async (req, res) => {
   const userId = req.auth.userId;
   const { steps, date } = req.body;
 
@@ -23,7 +24,7 @@ router.post("/steps", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.post("/bodyfat", async (req, res) => {
+router.post("/bodyfat", canAccess(19), async (req, res) => {
   const userId = req.auth.userId;
   const { bodyfat, date } = req.body;
 
@@ -31,7 +32,7 @@ router.post("/bodyfat", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.post("/water", async (req, res) => {
+router.post("/water", canAccess(17), async (req, res) => {
   const userId = req.auth.userId;
   const { water, date } = req.body;
 
@@ -39,7 +40,7 @@ router.post("/water", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.post("/calories", async (req, res) => {
+router.post("/calories", canAccess(18), async (req, res) => {
   const userId = req.auth.userId;
   const { calories, date } = req.body;
 
@@ -47,7 +48,7 @@ router.post("/calories", async (req, res) => {
   res.status(200).json("Success");
 });
 
-router.get("/sleep/oura/:date", async (req, res) => {
+router.get("/sleep/oura/:date", canAccess(16), async (req, res) => {
   const userId = req.auth.userId;
   const date = req.params.date;
   const result = await logFunctions.getDailySleepOura(userId, date);

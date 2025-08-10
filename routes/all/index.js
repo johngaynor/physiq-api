@@ -1,12 +1,13 @@
 const router = require("express").Router();
+const canAccess = require("../../models/middleware/canAccess");
 const allFunctions = require("../../models/all");
 
-router.get("/apps", async (req, res) => {
+router.get("/apps", canAccess(1), async (req, res) => {
   const result = await allFunctions.getApps();
   res.status(200).json(result);
 });
 
-router.get("/users", async (req, res) => {
+router.get("/users", canAccess(1), async (req, res) => {
   const result = await allFunctions.getUsers();
   res.status(200).json(result);
 });
@@ -27,7 +28,7 @@ router.get("/app/access/:userId", async (req, res) => {
   res.status(200).json(result);
 });
 
-router.post("/app/access", async (req, res) => {
+router.post("/app/access", canAccess(1), async (req, res) => {
   const { userId, app, checked } = req.body;
   const result = await allFunctions.updateAppAccess(userId, app.id, checked);
   res.status(200).json({ success: result });
