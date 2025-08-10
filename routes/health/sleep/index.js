@@ -1,13 +1,14 @@
 const router = require("express").Router();
+const canAccess = require("../../../models/middleware/canAccess");
 const sleepFunctions = require("../../../models/health/sleep");
 
-router.get("/logs", async (req, res) => {
+router.get("/logs", canAccess(16), async (req, res) => {
   const userId = req.auth.userId;
   const result = await sleepFunctions.getSleepLogs(userId);
   res.status(200).json(result);
 });
 
-router.post("/log", async (req, res) => {
+router.post("/log", canAccess(16), async (req, res) => {
   const userId = req.auth.userId;
   try {
     const result = await sleepFunctions.editSleepLog(userId, req.body);
