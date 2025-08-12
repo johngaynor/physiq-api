@@ -7,9 +7,9 @@ router.get("/", canAccess(38), async (req, res) => {
   res.status(200).json(result);
 });
 
-router.delete("/", canAccess(38), async (req, res) => {
+router.delete("/exercise/:id", canAccess(38), async (req, res) => {
   try {
-    const { id } = req.body;
+    const { id } = req.params;
 
     if (!id) {
       return res.status(400).json({ error: "Exercise ID is required" });
@@ -27,7 +27,7 @@ router.delete("/", canAccess(38), async (req, res) => {
   }
 });
 
-router.post("/", canAccess(38), async (req, res) => {
+router.post("/exercise", canAccess(38), async (req, res) => {
   try {
     const { id, name } = req.body;
 
