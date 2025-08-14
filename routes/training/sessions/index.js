@@ -36,7 +36,7 @@ router.delete("/session/:id", canAccess(38), async (req, res) => {
 
 router.post("/session", canAccess(38), async (req, res) => {
   try {
-    const { id, name, comments, createdBy } = req.body;
+    const { id, name, comments, createdBy, type } = req.body;
     const userId = req.auth.userId;
 
     if (!name) {
@@ -49,6 +49,7 @@ router.post("/session", canAccess(38), async (req, res) => {
       createdBy,
       name,
       comments,
+      type,
     });
 
     res.status(200).json({

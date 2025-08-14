@@ -11,7 +11,8 @@ const sessionFunctions = {
                 userId,
                 createdBy,
                 name,
-                comments
+                comments,
+                type
             FROM sessions
             WHERE userId = ?
             ORDER BY id DESC
@@ -49,7 +50,7 @@ const sessionFunctions = {
     });
   },
 
-  async editSession({ id, userId, createdBy, name, comments }) {
+  async editSession({ id, userId, createdBy, name, comments, type }) {
     return new Promise(async function (resolve, reject) {
       try {
         let returnId = id;
@@ -59,10 +60,10 @@ const sessionFunctions = {
           const [result] = await db.pool.query(
             `
               UPDATE sessions
-              SET name = ?, comments = ?, createdBy = ?
+              SET name = ?, comments = ?, createdBy = ?, type = ?
               WHERE id = ? AND userId = ?
             `,
-            [name, comments, createdBy, id, userId]
+            [name, comments, createdBy, type, id, userId]
           );
 
           if (result.affectedRows === 0) {
@@ -73,10 +74,10 @@ const sessionFunctions = {
           // Insert new session
           const [result] = await db.pool.query(
             `
-              INSERT INTO sessions (userId, createdBy, name, comments)
-              VALUES (?, ?, ?, ?)
+              INSERT INTO sessions (userId, createdBy, name, comments, type)
+              VALUES (?, ?, ?, ?, ?)
             `,
-            [userId, createdBy, name, comments]
+            [userId, createdBy, name, comments, type]
           );
 
           returnId = result.insertId;
