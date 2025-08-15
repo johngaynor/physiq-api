@@ -457,7 +457,7 @@ const checkInFunctions = {
         if (result.length === 0) {
           resolve(null);
           return;
-        } else resolve(result[0].coachEmail);
+        } else resolve(result[0].email);
       } catch (error) {
         reject(error);
       }
