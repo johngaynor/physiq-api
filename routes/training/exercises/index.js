@@ -52,4 +52,9 @@ router.post("/exercise", canAccess(38), async (req, res) => {
   }
 });
 
+router.get("/units", canAccess(38), async (req, res) => {
+  const result = await exerciseFunctions.getExerciseUnits();
+  res.status(200).json(result);
+});
+
 module.exports = router;

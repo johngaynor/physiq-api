@@ -82,6 +82,26 @@ const exerciseFunctions = {
       }
     });
   },
+
+  async getExerciseUnits() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [exerciseUnits] = await db.pool.query(
+          `
+            SELECT
+                id,
+                name,
+                measurement
+            FROM exerciseUnits
+          `
+        );
+
+        resolve(exerciseUnits);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = exerciseFunctions;
