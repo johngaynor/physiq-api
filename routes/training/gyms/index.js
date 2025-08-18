@@ -29,20 +29,15 @@ router.delete("/gym/:id", canAccess(38), async (req, res) => {
 
 router.post("/gym", canAccess(38), async (req, res) => {
   try {
-    const { id, name, address } = req.body;
     const userId = req.auth.userId;
-
-    if (!name) {
-      return res.status(400).json({ error: "Gym name is required" });
-    }
-
-    if (!address) {
-      return res.status(400).json({ error: "Gym address is required" });
-    }
-
-    const result = await gymFunctions.editGym({ id, name, address, userId });
+    const result = await gymFunctions.editGym({
+      ...req.body,
+      createdBy: userId,
+    });
     res.status(200).json({
-      message: id ? "Gym updated successfully" : "Gym created successfully",
+      message: req.body.id
+        ? "Gym updated successfully"
+        : "Gym created successfully",
       gym: result,
     });
   } catch (error) {
