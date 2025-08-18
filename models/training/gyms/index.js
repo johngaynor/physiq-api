@@ -9,8 +9,15 @@ const gymFunctions = {
             SELECT
                 id,
                 name,
-                address,
-                submittedBy
+                streetAddress,
+                city,
+                state,
+                postalCode,
+                fullAddress,
+                latitude,
+                longitude,
+                createdBy,
+                lastUpdated
             FROM gyms
           `
         );
@@ -45,20 +52,41 @@ const gymFunctions = {
     });
   },
 
-  async editGym({ id, name, address, userId }) {
+  async editGym({
+    id,
+    name,
+    streetAddress,
+    city,
+    state,
+    postalCode,
+    fullAddress,
+    latitude,
+    longitude,
+    userId,
+  }) {
     return new Promise(async function (resolve, reject) {
       try {
         let returnId = id;
 
         if (id) {
-          // Update existing gym
+          // Update existing gym (createdBy is not modified)
           const [result] = await db.pool.query(
             `
               UPDATE gyms
-              SET name = ?, address = ?
+              SET name = ?, streetAddress = ?, city = ?, state = ?, postalCode = ?, fullAddress = ?, latitude = ?, longitude = ?
               WHERE id = ?
             `,
-            [name, address, id]
+            [
+              name,
+              streetAddress,
+              city,
+              state,
+              postalCode,
+              fullAddress,
+              latitude,
+              longitude,
+              id,
+            ]
           );
 
           if (result.affectedRows === 0) {
@@ -69,10 +97,20 @@ const gymFunctions = {
           // Insert new gym
           const [result] = await db.pool.query(
             `
-              INSERT INTO gyms (name, address, submittedBy)
-              VALUES (?, ?, ?)
+              INSERT INTO gyms (name, streetAddress, city, state, postalCode, fullAddress, latitude, longitude, createdBy)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
-            [name, address, userId]
+            [
+              name,
+              streetAddress,
+              city,
+              state,
+              postalCode,
+              fullAddress,
+              latitude,
+              longitude,
+              userId,
+            ]
           );
 
           returnId = result.insertId;
