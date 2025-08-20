@@ -1,4 +1,7 @@
 const db = require("../../../config/database");
+// Generate signed URLs and blob data for each photo
+const { getUrl, getFileAsBlob } = require("../../../config/awsConfig");
+const bucketName = process.env.GYM_PHOTOS_BUCKET;
 
 const gymFunctions = {
   async getGyms() {
@@ -117,6 +120,87 @@ const gymFunctions = {
         }
 
         resolve({ id: returnId });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  async getGymPhotos(gymId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // First verify the gym exists
+        const [gymExists] = await db.pool.query(
+          `
+            SELECT id FROM gyms 
+            WHERE id = ?
+          `,
+          [gymId]
+        );
+
+        if (!gymExists.length) {
+          reject(new Error("Gym not found"));
+          return;
+        }
+
+        // Get photos for the gym
+        const [photos] = await db.pool.query(
+          `
+            SELECT
+                id,
+                s3Filename,
+                createdBy,
+                lastUpdated
+            FROM gymsPhotos
+            WHERE gymId = ?
+            ORDER BY lastUpdated DESC
+          `,
+          [gymId]
+        );
+
+        const photosWithUrls = await Promise.all(
+          photos.map(async (photo) => {
+            try {
+              const signedUrl = await getUrl(bucketName, photo.s3Filename);
+
+              // Get the file as blob
+              const blobData = await getFileAsBlob(
+                bucketName,
+                photo.s3Filename
+              );
+
+              return {
+                id: photo.id,
+                url: signedUrl,
+                s3Filename: photo.s3Filename,
+                createdBy: photo.createdBy,
+                lastUpdated: photo.lastUpdated,
+                blob: {
+                  data: blobData.buffer.toString("base64"),
+                  contentType: blobData.contentType,
+                  size: blobData.contentLength,
+                  lastModified: blobData.lastModified,
+                },
+              };
+            } catch (error) {
+              console.error(
+                `Error generating URL/blob for ${photo.s3Filename}:`,
+                error
+              );
+              return {
+                id: photo.id,
+                url: null,
+                s3Filename: photo.s3Filename,
+                createdBy: photo.createdBy,
+                lastUpdated: photo.lastUpdated,
+                blob: null,
+                error: "Unable to generate URL or download blob",
+              };
+            }
+          })
+        );
+
+        resolve(photosWithUrls);
       } catch (error) {
         reject(error);
       }
