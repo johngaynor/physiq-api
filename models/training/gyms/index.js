@@ -206,6 +206,48 @@ const gymFunctions = {
       }
     });
   },
+
+  async uploadGymPhotos(gymId, userId, photoFilenames) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // First verify the gym exists
+        const [gymExists] = await db.pool.query(
+          `
+            SELECT id FROM gyms 
+            WHERE id = ?
+          `,
+          [gymId]
+        );
+
+        if (!gymExists.length) {
+          reject(new Error("Gym not found"));
+          return;
+        }
+
+        // Insert each photo into the database
+        const insertPromises = photoFilenames.map(async (filename) => {
+          const [result] = await db.pool.query(
+            `
+              INSERT INTO gymsPhotos (gymId, s3Filename, createdBy)
+              VALUES (?, ?, ?)
+            `,
+            [gymId, filename, userId]
+          );
+          return result.insertId;
+        });
+
+        const insertedIds = await Promise.all(insertPromises);
+
+        resolve({
+          message: "Photos uploaded successfully",
+          uploadedPhotos: insertedIds.length,
+          photoIds: insertedIds,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = gymFunctions;

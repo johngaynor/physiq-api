@@ -1,6 +1,10 @@
 const router = require("express").Router();
 const canAccess = require("../../../models/middleware/canAccess");
 const gymFunctions = require("../../../models/training/gyms");
+const { upload } = require("../../../config/awsConfig");
+
+// Create upload middleware for gym photos
+const uploadPhotos = upload(process.env.GYM_PHOTOS_BUCKET);
 
 router.get("/", canAccess(38), async (req, res) => {
   const result = await gymFunctions.getGyms();
@@ -65,5 +69,49 @@ router.get("/photos/:id", canAccess(38), async (req, res) => {
     }
   }
 });
+
+router.post(
+  "/photos",
+  canAccess(38),
+  uploadPhotos.array("images", 20),
+  async (req, res) => {
+    try {
+      const userId = req.auth.userId;
+      const { gymId } = req.body;
+
+      if (!gymId) {
+        return res.status(400).json({ error: "Gym ID is required" });
+      }
+
+      // Get uploaded files info from S3
+      const uploadedFiles = req.files || [];
+
+      if (uploadedFiles.length === 0) {
+        return res.status(400).json({ error: "No photos were uploaded" });
+      }
+
+      const uploadedFileKeys = uploadedFiles.map((file) => file.key);
+
+      // Save the photo references to the database
+      const result = await gymFunctions.uploadGymPhotos(
+        gymId,
+        userId,
+        uploadedFileKeys
+      );
+
+      res.status(200).json({
+        message: "Gym photos uploaded successfully",
+        ...result,
+      });
+    } catch (error) {
+      console.error("Error uploading gym photos:", error);
+      if (error.message === "Gym not found") {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to upload gym photos" });
+      }
+    }
+  }
+);
 
 module.exports = router;
