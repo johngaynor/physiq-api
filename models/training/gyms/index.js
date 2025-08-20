@@ -1,6 +1,10 @@
 const db = require("../../../config/database");
 // Generate signed URLs and blob data for each photo
-const { getUrl, getFileAsBlob, deleteFile } = require("../../../config/awsConfig");
+const {
+  getUrl,
+  getFileAsBlob,
+  deleteFile,
+} = require("../../../config/awsConfig");
 const bucketName = process.env.GYM_PHOTOS_BUCKET;
 
 const gymFunctions = {
