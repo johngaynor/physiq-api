@@ -24,7 +24,8 @@ const gymFunctions = {
                 latitude,
                 longitude,
                 createdBy,
-                lastUpdated
+                lastUpdated,
+                comments
             FROM gyms
           `
         );
@@ -69,6 +70,7 @@ const gymFunctions = {
     fullAddress,
     latitude,
     longitude,
+    comments,
     userId,
   }) {
     return new Promise(async function (resolve, reject) {
@@ -80,7 +82,7 @@ const gymFunctions = {
           const [result] = await db.pool.query(
             `
               UPDATE gyms
-              SET name = ?, streetAddress = ?, city = ?, state = ?, postalCode = ?, fullAddress = ?, latitude = ?, longitude = ?
+              SET name = ?, streetAddress = ?, city = ?, state = ?, postalCode = ?, fullAddress = ?, latitude = ?, longitude = ?, comments = ?
               WHERE id = ?
             `,
             [
@@ -92,6 +94,7 @@ const gymFunctions = {
               fullAddress,
               latitude,
               longitude,
+              comments,
               id,
             ]
           );
@@ -104,8 +107,8 @@ const gymFunctions = {
           // Insert new gym
           const [result] = await db.pool.query(
             `
-              INSERT INTO gyms (name, streetAddress, city, state, postalCode, fullAddress, latitude, longitude, createdBy)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              INSERT INTO gyms (name, streetAddress, city, state, postalCode, fullAddress, latitude, longitude, comments, createdBy)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
               name,
@@ -116,6 +119,7 @@ const gymFunctions = {
               fullAddress,
               latitude,
               longitude,
+              comments,
               userId,
             ]
           );
