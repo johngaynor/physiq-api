@@ -114,4 +114,31 @@ router.post(
   }
 );
 
+router.delete("/photos/:id", canAccess(38), async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Photo ID is required" });
+    }
+
+    const result = await gymFunctions.deleteGymPhoto(id, userId);
+
+    res.status(200).json({
+      message: "Photo deleted successfully",
+      ...result,
+    });
+  } catch (error) {
+    console.error("Error deleting gym photo:", error);
+    if (error.message === "Photo not found") {
+      res.status(404).json({ error: error.message });
+    } else if (error.message === "Unauthorized to delete this photo") {
+      res.status(403).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Failed to delete gym photo" });
+    }
+  }
+});
+
 module.exports = router;

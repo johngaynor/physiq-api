@@ -1,6 +1,6 @@
 const db = require("../../../config/database");
 // Generate signed URLs and blob data for each photo
-const { getUrl, getFileAsBlob } = require("../../../config/awsConfig");
+const { getUrl, getFileAsBlob, deleteFile } = require("../../../config/awsConfig");
 const bucketName = process.env.GYM_PHOTOS_BUCKET;
 
 const gymFunctions = {
@@ -242,6 +242,68 @@ const gymFunctions = {
           message: "Photos uploaded successfully",
           uploadedPhotos: insertedIds.length,
           photoIds: insertedIds,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  async deleteGymPhoto(photoId, userId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // First get the photo details to verify ownership and get S3 filename
+        const [photoDetails] = await db.pool.query(
+          `
+            SELECT gp.id, gp.s3Filename, gp.gymId, gp.createdBy
+            FROM gymsPhotos gp
+            WHERE gp.id = ?
+          `,
+          [photoId]
+        );
+
+        if (!photoDetails.length) {
+          reject(new Error("Photo not found"));
+          return;
+        }
+
+        const photo = photoDetails[0];
+
+        // Optional: Check if user has permission to delete (creator or admin)
+        // You can modify this logic based on your permission requirements
+        if (photo.createdBy !== userId) {
+          // You might want to add additional admin check here
+          reject(new Error("Unauthorized to delete this photo"));
+          return;
+        }
+
+        // Delete from S3 first
+        try {
+          await deleteFile(bucketName, photo.s3Filename);
+        } catch (s3Error) {
+          console.error("Error deleting from S3:", s3Error);
+          // You can decide whether to continue with database deletion or fail here
+          // For now, we'll continue and just log the error
+        }
+
+        // Delete from database
+        const [result] = await db.pool.query(
+          `
+            DELETE FROM gymsPhotos
+            WHERE id = ?
+          `,
+          [photoId]
+        );
+
+        if (result.affectedRows === 0) {
+          reject(new Error("Photo not found in database"));
+          return;
+        }
+
+        resolve({
+          message: "Photo deleted successfully",
+          photoId: photoId,
+          s3Filename: photo.s3Filename,
         });
       } catch (error) {
         reject(error);
