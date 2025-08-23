@@ -30,7 +30,30 @@ const gymFunctions = {
           `
         );
 
-        resolve(gyms);
+        // Get tags for all gyms
+        const [tags] = await db.pool.query(
+          `
+            SELECT
+                gymId,
+                tag
+            FROM gymsTags
+            ORDER BY gymId, tag
+          `
+        );
+
+        // Map tags to gyms
+        const gymsWithTags = gyms.map((gym) => {
+          const gymTags = tags
+            .filter((tag) => tag.gymId === gym.id)
+            .map((tag) => tag.tag);
+
+          return {
+            ...gym,
+            tags: gymTags,
+          };
+        });
+
+        resolve(gymsWithTags);
       } catch (error) {
         reject(error);
       }
@@ -71,6 +94,7 @@ const gymFunctions = {
     latitude,
     longitude,
     comments,
+    tags,
     userId,
   }) {
     return new Promise(async function (resolve, reject) {
@@ -125,6 +149,38 @@ const gymFunctions = {
           );
 
           returnId = result.insertId;
+        }
+
+        // Handle tags if provided
+        if (tags && Array.isArray(tags)) {
+          // Clear existing tags for this gym
+          await db.pool.query(
+            `
+              DELETE FROM gymsTags
+              WHERE gymId = ?
+            `,
+            [returnId]
+          );
+
+          // Insert new tags if any are provided
+          if (tags.length > 0) {
+            // Filter out empty/null tags and remove duplicates
+            const validTags = [
+              ...new Set(tags.filter((tag) => tag && tag.trim().length > 0)),
+            ];
+
+            if (validTags.length > 0) {
+              const tagValues = validTags.map((tag) => [returnId, tag.trim()]);
+
+              await db.pool.query(
+                `
+                  INSERT INTO gymsTags (gymId, tag)
+                  VALUES ?
+                `,
+                [tagValues]
+              );
+            }
+          }
         }
 
         resolve({ id: returnId });
