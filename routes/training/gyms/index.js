@@ -157,4 +157,46 @@ router.get("/reviews/:id", canAccess(38), async (req, res) => {
   }
 });
 
+router.post("/reviews", canAccess(38), async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { id, gymId, rating, review } = req.body;
+
+    // Validate required fields
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    }
+
+    if (!id && !gymId) {
+      return res
+        .status(400)
+        .json({ error: "Gym ID is required for new reviews" });
+    }
+
+    const result = await gymFunctions.upsertGymReview({
+      id,
+      gymId,
+      userId,
+      rating,
+      review,
+    });
+
+    res.status(200).json({
+      message: id
+        ? "Review updated successfully"
+        : "Review created successfully",
+      review: result,
+    });
+  } catch (error) {
+    console.error("Error creating/updating review:", error);
+    if (error.message === "Review not found or unauthorized") {
+      res.status(404).json({ error: error.message });
+    } else if (error.message === "Failed to retrieve review") {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Failed to save review" });
+    }
+  }
+});
+
 module.exports = router;

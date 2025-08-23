@@ -394,6 +394,67 @@ const gymFunctions = {
       }
     });
   },
+
+  async upsertGymReview({ id, gymId, userId, rating, review }) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        let returnId = id;
+
+        if (id) {
+          // Update existing review
+          const [result] = await db.pool.query(
+            `
+              UPDATE gymsReviews
+              SET rating = ?, review = ?
+              WHERE id = ? AND userId = ?
+            `,
+            [rating, review, id, userId]
+          );
+
+          if (result.affectedRows === 0) {
+            reject(new Error("Review not found or unauthorized"));
+            return;
+          }
+        } else {
+          // Insert new review
+          const [result] = await db.pool.query(
+            `
+              INSERT INTO gymsReviews (gymId, userId, rating, review)
+              VALUES (?, ?, ?, ?)
+            `,
+            [gymId, userId, rating, review]
+          );
+
+          returnId = result.insertId;
+        }
+
+        // Select and return the review
+        const [reviewResult] = await db.pool.query(
+          `
+            SELECT
+                id,
+                gymId,
+                userId,
+                rating,
+                review,
+                lastUpdated
+            FROM reviews
+            WHERE id = ?
+          `,
+          [returnId]
+        );
+
+        if (!reviewResult.length) {
+          reject(new Error("Failed to retrieve review"));
+          return;
+        }
+
+        resolve(reviewResult[0]);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = gymFunctions;
