@@ -41,19 +41,39 @@ const gymFunctions = {
           `
         );
 
-        // Map tags to gyms
-        const gymsWithTags = gyms.map((gym) => {
+        // Get reviews for all gyms
+        const [reviews] = await db.pool.query(
+          `
+            SELECT
+                id,
+                gymId,
+                userId,
+                rating,
+                review,
+                lastUpdated
+            FROM gymsReviews
+            ORDER BY gymId, lastUpdated DESC
+          `
+        );
+
+        // Map tags and reviews to gyms
+        const gymsWithTagsAndReviews = gyms.map((gym) => {
           const gymTags = tags
             .filter((tag) => tag.gymId === gym.id)
             .map((tag) => tag.tag);
 
+          const gymReviews = reviews.filter(
+            (review) => review.gymId === gym.id
+          );
+
           return {
             ...gym,
             tags: gymTags,
+            reviews: gymReviews,
           };
         });
 
-        resolve(gymsWithTags);
+        resolve(gymsWithTagsAndReviews);
       } catch (error) {
         reject(error);
       }

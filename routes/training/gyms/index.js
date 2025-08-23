@@ -141,4 +141,20 @@ router.delete("/photos/:id", canAccess(38), async (req, res) => {
   }
 });
 
+router.get("/reviews/:id", canAccess(38), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await gymFunctions.getGymReviews(id);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getting gym reviews:", error);
+    if (error.message === "Gym not found") {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Failed to get gym reviews" });
+    }
+  }
+});
+
 module.exports = router;
