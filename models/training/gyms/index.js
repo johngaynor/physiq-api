@@ -238,6 +238,8 @@ const gymFunctions = {
               g.createdBy,
               g.lastUpdated,
               g.comments,
+              g.dayPasses,
+              g.cost,
               (
                 SELECT COUNT(*)
                 FROM sessions s
