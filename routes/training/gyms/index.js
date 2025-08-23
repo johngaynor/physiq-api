@@ -7,7 +7,8 @@ const { upload } = require("../../../config/awsConfig");
 const uploadPhotos = upload(process.env.GYM_PHOTOS_BUCKET);
 
 router.get("/", canAccess(38), async (req, res) => {
-  const result = await gymFunctions.getGyms();
+  const userId = req.auth.userId;
+  const result = await gymFunctions.getGyms(userId);
   res.status(200).json(result);
 });
 
@@ -36,7 +37,7 @@ router.post("/gym", canAccess(38), async (req, res) => {
     const userId = req.auth.userId;
     const result = await gymFunctions.editGym({
       ...req.body,
-      createdBy: userId,
+      userId: userId,
     });
     res.status(200).json({
       message: req.body.id
@@ -181,12 +182,7 @@ router.post("/review", canAccess(38), async (req, res) => {
       review,
     });
 
-    res.status(200).json({
-      message: id
-        ? "Review updated successfully"
-        : "Review created successfully",
-      review: result,
-    });
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error creating/updating review:", error);
     if (error.message === "Review not found or unauthorized") {

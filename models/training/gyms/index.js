@@ -8,26 +8,37 @@ const {
 const bucketName = process.env.GYM_PHOTOS_BUCKET;
 
 const gymFunctions = {
-  async getGyms() {
+  async getGyms(userId) {
     return new Promise(async function (resolve, reject) {
       try {
         const [gyms] = await db.pool.query(
           `
             SELECT
-                id,
-                name,
-                streetAddress,
-                city,
-                state,
-                postalCode,
-                fullAddress,
-                latitude,
-                longitude,
-                createdBy,
-                lastUpdated,
-                comments
-            FROM gyms
-          `
+                g.id,
+                g.name,
+                g.streetAddress,
+                g.city,
+                g.state,
+                g.postalCode,
+                g.fullAddress,
+                g.latitude,
+                g.longitude,
+                g.createdBy,
+                g.lastUpdated,
+                g.comments,
+                (
+                  SELECT COUNT(*)
+                  FROM sessions s
+                  WHERE s.gymId = g.id AND s.userId = ?
+                ) AS yourSessions,
+                (
+                  SELECT COUNT(*)
+                  FROM sessions s
+                  WHERE s.gymId = g.id
+                ) AS totalSessions
+            FROM gyms g;
+          `,
+          [userId]
         );
 
         // Get tags for all gyms
@@ -203,7 +214,59 @@ const gymFunctions = {
           }
         }
 
-        resolve({ id: returnId });
+        // Select and return the complete gym object with tags
+        const [gymResult] = await db.pool.query(
+          `
+           SELECT
+              g.id,
+              g.name,
+              g.streetAddress,
+              g.city,
+              g.state,
+              g.postalCode,
+              g.fullAddress,
+              g.latitude,
+              g.longitude,
+              g.createdBy,
+              g.lastUpdated,
+              g.comments,
+              (
+                SELECT COUNT(*)
+                FROM sessions s
+                WHERE s.gymId = g.id AND s.userId = ?
+              ) AS yourSessions,
+              (
+                SELECT COUNT(*)
+                FROM sessions s
+                WHERE s.gymId = g.id
+              ) AS totalSessions
+          FROM gyms g;
+          `,
+          [returnId, userId]
+        );
+
+        if (!gymResult.length) {
+          reject(new Error("Failed to retrieve gym"));
+          return;
+        }
+
+        // Get tags for this gym
+        const [gymTags] = await db.pool.query(
+          `
+            SELECT tag
+            FROM gymsTags
+            WHERE gymId = ?
+            ORDER BY tag
+          `,
+          [returnId]
+        );
+
+        const gymWithTags = {
+          ...gymResult[0],
+          tags: gymTags.map((tagRow) => tagRow.tag),
+        };
+
+        resolve(gymWithTags);
       } catch (error) {
         reject(error);
       }
@@ -438,7 +501,7 @@ const gymFunctions = {
                 rating,
                 review,
                 lastUpdated
-            FROM reviews
+            FROM gymsReviews
             WHERE id = ?
           `,
           [returnId]
