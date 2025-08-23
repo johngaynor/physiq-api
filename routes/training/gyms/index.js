@@ -157,7 +157,7 @@ router.get("/reviews/:id", canAccess(38), async (req, res) => {
   }
 });
 
-router.post("/reviews", canAccess(38), async (req, res) => {
+router.post("/review", canAccess(38), async (req, res) => {
   try {
     const userId = req.auth.userId;
     const { id, gymId, rating, review } = req.body;
