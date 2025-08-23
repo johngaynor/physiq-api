@@ -26,6 +26,8 @@ const gymFunctions = {
                 g.createdBy,
                 g.lastUpdated,
                 g.comments,
+                g.dayPasses,
+                g.cost,
                 (
                   SELECT COUNT(*)
                   FROM sessions s
@@ -125,6 +127,8 @@ const gymFunctions = {
     latitude,
     longitude,
     comments,
+    dayPasses,
+    cost,
     tags,
     userId,
   }) {
@@ -137,7 +141,7 @@ const gymFunctions = {
           const [result] = await db.pool.query(
             `
               UPDATE gyms
-              SET name = ?, streetAddress = ?, city = ?, state = ?, postalCode = ?, fullAddress = ?, latitude = ?, longitude = ?, comments = ?
+              SET name = ?, streetAddress = ?, city = ?, state = ?, postalCode = ?, fullAddress = ?, latitude = ?, longitude = ?, comments = ?, dayPasses = ?, cost = ?
               WHERE id = ?
             `,
             [
@@ -150,6 +154,8 @@ const gymFunctions = {
               latitude,
               longitude,
               comments,
+              dayPasses,
+              cost,
               id,
             ]
           );
@@ -162,8 +168,8 @@ const gymFunctions = {
           // Insert new gym
           const [result] = await db.pool.query(
             `
-              INSERT INTO gyms (name, streetAddress, city, state, postalCode, fullAddress, latitude, longitude, comments, createdBy)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              INSERT INTO gyms (name, streetAddress, city, state, postalCode, fullAddress, latitude, longitude, comments, dayPasses, cost, createdBy)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
               name,
@@ -175,6 +181,8 @@ const gymFunctions = {
               latitude,
               longitude,
               comments,
+              dayPasses,
+              cost,
               userId,
             ]
           );
