@@ -39,12 +39,7 @@ router.post("/gym", canAccess(38), async (req, res) => {
       ...req.body,
       userId: userId,
     });
-    res.status(200).json({
-      message: req.body.id
-        ? "Gym updated successfully"
-        : "Gym created successfully",
-      gym: result,
-    });
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error editing gym:", error);
     if (error.message === "Gym not found") {

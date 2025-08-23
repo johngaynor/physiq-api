@@ -240,9 +240,10 @@ const gymFunctions = {
                 FROM sessions s
                 WHERE s.gymId = g.id
               ) AS totalSessions
-          FROM gyms g;
+          FROM gyms g
+          WHERE g.id = ?
           `,
-          [returnId, userId]
+          [userId, returnId]
         );
 
         if (!gymResult.length) {
