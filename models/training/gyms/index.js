@@ -272,12 +272,30 @@ const gymFunctions = {
           [returnId]
         );
 
-        const gymWithTags = {
+        // Get reviews for this gym
+        const [gymReviews] = await db.pool.query(
+          `
+            SELECT
+                id,
+                gymId,
+                userId,
+                rating,
+                review,
+                lastUpdated
+            FROM gymsReviews
+            WHERE gymId = ?
+            ORDER BY lastUpdated DESC
+          `,
+          [returnId]
+        );
+
+        const gymWithTagsAndReviews = {
           ...gymResult[0],
           tags: gymTags.map((tagRow) => tagRow.tag),
+          reviews: gymReviews,
         };
 
-        resolve(gymWithTags);
+        resolve(gymWithTagsAndReviews);
       } catch (error) {
         reject(error);
       }
