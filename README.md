@@ -2,7 +2,7 @@
 
 <p align="center"><img src="https://socialify.git.ci/johngaynor/physiq-api/image?language=1&amp;name=1&amp;owner=1&amp;pattern=Plus&amp;theme=Light" alt="project-image"></p>
 
-<p id="description">PhysiQ API — an Express.js server that powers the app with RESTful endpoints for authentication, training logs, check-ins, health metrics, and integrations.</p>
+<p id="description">PhysiQ API — an Express.js server that powers the PhysiQ platform of applications with RESTful endpoints for authentication, training logs, check-ins, health metrics, and integrations.</p>
 
 <p align="center"><img src="https://img.shields.io/badge/version-1.0.0-blue" alt="shields"><img src="https://img.shields.io/badge/contributors-1-green" alt="shields"><img src="https://img.shields.io/badge/status-stable-green" alt="shields"></p>
 
