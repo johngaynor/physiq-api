@@ -44,12 +44,7 @@ router.post("/exercise", canAccess(38), async (req, res) => {
       targets,
     });
 
-    res.status(200).json({
-      message: id
-        ? "Exercise updated successfully"
-        : "Exercise created successfully",
-      exercise: result,
-    });
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error editing exercise:", error);
     if (error.message === "Exercise not found") {

@@ -178,6 +178,7 @@ const exerciseFunctions = {
                 name,
                 defaultPrimaryUnit,
                 defaultSecondaryUnit
+            FROM exercises
             WHERE id = ?
           `,
           [returnId]
