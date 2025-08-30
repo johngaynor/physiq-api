@@ -12,8 +12,8 @@ const exerciseFunctions = {
                 pu.name AS primaryUnitType,
                 su.name AS secondaryUnitType
             FROM exercises e
-            LEFT JOIN exerciseUnits pu ON e.defaultPrimaryUnit = pu.id
-            LEFT JOIN exerciseUnits su ON e.defaultSecondaryUnit = su.id
+            LEFT JOIN exercisesUnits pu ON e.defaultPrimaryUnit = pu.id
+            LEFT JOIN exercisesUnits su ON e.defaultSecondaryUnit = su.id
           `
         );
 
@@ -71,7 +71,7 @@ const exerciseFunctions = {
     });
   },
 
-  async editExercise({ id, name }) {
+  async editExercise({ id, name, defaultPrimaryUnit, defaultSecondaryUnit }) {
     return new Promise(async function (resolve, reject) {
       try {
         let returnId = id;
@@ -81,10 +81,10 @@ const exerciseFunctions = {
           const [result] = await db.pool.query(
             `
               UPDATE exercises
-              SET name = ?
+              SET name = ?, defaultPrimaryUnit = ?, defaultSecondaryUnit = ?
               WHERE id = ?
             `,
-            [name, id]
+            [name, defaultPrimaryUnit, defaultSecondaryUnit, id]
           );
 
           if (result.affectedRows === 0) {
@@ -95,36 +95,55 @@ const exerciseFunctions = {
           // Insert new exercise
           const [result] = await db.pool.query(
             `
-              INSERT INTO exercises (name)
-              VALUES (?)
+              INSERT INTO exercises (name, defaultPrimaryUnit, defaultSecondaryUnit)
+              VALUES (?, ?, ?)
             `,
-            [name]
+            [name, defaultPrimaryUnit, defaultSecondaryUnit]
           );
 
           returnId = result.insertId;
         }
 
-        resolve({ id: returnId });
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-
-  async getExerciseUnits() {
-    return new Promise(async function (resolve, reject) {
-      try {
-        const [exerciseUnits] = await db.pool.query(
+        // Select and return the complete exercise object with units and targets
+        const [exercise] = await db.pool.query(
           `
             SELECT
-                id,
-                name,
-                measurement
-            FROM exerciseUnits
-          `
+                e.id,
+                e.name,
+                pu.name AS primaryUnitType,
+                su.name AS secondaryUnitType
+            FROM exercises e
+            LEFT JOIN exerciseUnits pu ON e.defaultPrimaryUnit = pu.id
+            LEFT JOIN exerciseUnits su ON e.defaultSecondaryUnit = su.id
+            WHERE e.id = ?
+          `,
+          [returnId]
         );
 
-        resolve(exerciseUnits);
+        if (!exercise.length) {
+          reject(new Error("Failed to retrieve exercise"));
+          return;
+        }
+
+        // Get targets for this exercise
+        const [targets] = await db.pool.query(
+          `
+            SELECT
+                eto.name AS targetName
+            FROM exercisesTargets et
+            JOIN exercisesTargetsOptions eto ON et.targetId = eto.id
+            WHERE et.exerciseId = ?
+            ORDER BY eto.name
+          `,
+          [returnId]
+        );
+
+        const exerciseWithTargets = {
+          ...exercise[0],
+          targets: targets.map((target) => target.targetName),
+        };
+
+        resolve(exerciseWithTargets);
       } catch (error) {
         reject(error);
       }
