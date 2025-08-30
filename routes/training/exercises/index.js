@@ -29,14 +29,25 @@ router.delete("/exercise/:id", canAccess(38), async (req, res) => {
 
 router.post("/exercise", canAccess(38), async (req, res) => {
   try {
-    const { id, name } = req.body;
+    const { id, name, defaultPrimaryUnit, defaultSecondaryUnit } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: "Exercise name is required" });
     }
 
-    const result = await exerciseFunctions.editExercise({ id, name });
-    res.status(200).json(result);
+    const result = await exerciseFunctions.editExercise({
+      id,
+      name,
+      defaultPrimaryUnit: defaultPrimaryUnit || null,
+      defaultSecondaryUnit: defaultSecondaryUnit || null,
+    });
+
+    res.status(200).json({
+      message: id
+        ? "Exercise updated successfully"
+        : "Exercise created successfully",
+      exercise: result,
+    });
   } catch (error) {
     console.error("Error editing exercise:", error);
     if (error.message === "Exercise not found") {

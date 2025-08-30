@@ -29,19 +29,42 @@ const exerciseFunctions = {
           `
         );
 
-        // Map targets to exercises
-        const exercisesWithTargets = exercises.map((exercise) => {
+        // Get default machine configurations for all exercises
+        const [machineConfigs] = await db.pool.query(
+          `
+            SELECT
+                id,
+                exerciseId,
+                description,
+                s3Filename,
+                createdBy,
+                lastUpdated
+            FROM exercisesMachines
+            WHERE gymId IS NULL AND brandId IS NULL
+            ORDER BY exerciseId, id
+          `
+        );
+
+        // Map targets and machine configurations to exercises
+        const exercisesWithTargetsAndConfigs = exercises.map((exercise) => {
           const exerciseTargets = targets
             .filter((target) => target.exerciseId === exercise.id)
             .map((target) => target.targetName);
 
+          // Find the first default configuration for this exercise
+          const defaultConfiguration =
+            machineConfigs.find(
+              (config) => config.exerciseId === exercise.id
+            ) || null;
+
           return {
             ...exercise,
             targets: exerciseTargets,
+            defaultConfiguration: defaultConfiguration,
           };
         });
 
-        resolve(exercisesWithTargets);
+        resolve(exercisesWithTargetsAndConfigs);
       } catch (error) {
         reject(error);
       }
@@ -138,12 +161,32 @@ const exerciseFunctions = {
           [returnId]
         );
 
-        const exerciseWithTargets = {
+        // Get default machine configuration for this exercise
+        const [machineConfig] = await db.pool.query(
+          `
+            SELECT
+                id,
+                exerciseId,
+                description,
+                s3Filename,
+                createdBy,
+                lastUpdated
+            FROM exercisesMachines
+            WHERE exerciseId = ? AND gymId IS NULL AND brandId IS NULL
+            ORDER BY id
+            LIMIT 1
+          `,
+          [returnId]
+        );
+
+        const exerciseWithTargetsAndConfig = {
           ...exercise[0],
           targets: targets.map((target) => target.targetName),
+          defaultConfiguration:
+            machineConfig.length > 0 ? machineConfig[0] : null,
         };
 
-        resolve(exerciseWithTargets);
+        resolve(exerciseWithTargetsAndConfig);
       } catch (error) {
         reject(error);
       }
