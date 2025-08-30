@@ -7,13 +7,41 @@ const exerciseFunctions = {
         const [exercises] = await db.pool.query(
           `
             SELECT
-                id,
-                name
-            FROM exercises
+                e.id,
+                e.name,
+                pu.name AS primaryUnitType,
+                su.name AS secondaryUnitType
+            FROM exercises e
+            LEFT JOIN exerciseUnits pu ON e.defaultPrimaryUnit = pu.id
+            LEFT JOIN exerciseUnits su ON e.defaultSecondaryUnit = su.id
           `
         );
 
-        resolve(exercises);
+        // Get targets for all exercises
+        const [targets] = await db.pool.query(
+          `
+            SELECT
+                et.exerciseId,
+                eto.name AS targetName
+            FROM exercisesTargets et
+            JOIN exercisesTargetsOptions eto ON et.targetId = eto.id
+            ORDER BY et.exerciseId, eto.name
+          `
+        );
+
+        // Map targets to exercises
+        const exercisesWithTargets = exercises.map((exercise) => {
+          const exerciseTargets = targets
+            .filter((target) => target.exerciseId === exercise.id)
+            .map((target) => target.targetName);
+
+          return {
+            ...exercise,
+            targets: exerciseTargets,
+          };
+        });
+
+        resolve(exercisesWithTargets);
       } catch (error) {
         reject(error);
       }
