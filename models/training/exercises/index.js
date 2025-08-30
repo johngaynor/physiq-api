@@ -94,7 +94,13 @@ const exerciseFunctions = {
     });
   },
 
-  async editExercise({ id, name, defaultPrimaryUnit, defaultSecondaryUnit }) {
+  async editExercise({
+    id,
+    name,
+    defaultPrimaryUnit,
+    defaultSecondaryUnit,
+    targets,
+  }) {
     return new Promise(async function (resolve, reject) {
       try {
         let returnId = id;
@@ -127,6 +133,45 @@ const exerciseFunctions = {
           returnId = result.insertId;
         }
 
+        // Handle targets if provided
+        if (targets && Array.isArray(targets)) {
+          // Clear existing targets for this exercise
+          await db.pool.query(
+            `
+              DELETE FROM exercisesTargets
+              WHERE exerciseId = ?
+            `,
+            [returnId]
+          );
+
+          // Insert new targets if any are provided
+          if (targets.length > 0) {
+            // Filter out invalid target IDs and remove duplicates
+            const validTargets = [
+              ...new Set(
+                targets.filter(
+                  (targetId) => targetId && Number.isInteger(Number(targetId))
+                )
+              ),
+            ];
+
+            if (validTargets.length > 0) {
+              const targetValues = validTargets.map((targetId) => [
+                returnId,
+                Number(targetId),
+              ]);
+
+              await db.pool.query(
+                `
+                  INSERT INTO exercisesTargets (exerciseId, targetId)
+                  VALUES ?
+                `,
+                [targetValues]
+              );
+            }
+          }
+        }
+
         // Select and return the complete exercise object with units and targets
         const [exercise] = await db.pool.query(
           `
@@ -136,8 +181,8 @@ const exerciseFunctions = {
                 pu.name AS primaryUnitType,
                 su.name AS secondaryUnitType
             FROM exercises e
-            LEFT JOIN exerciseUnits pu ON e.defaultPrimaryUnit = pu.id
-            LEFT JOIN exerciseUnits su ON e.defaultSecondaryUnit = su.id
+            LEFT JOIN exercisesUnits pu ON e.defaultPrimaryUnit = pu.id
+            LEFT JOIN exercisesUnits su ON e.defaultSecondaryUnit = su.id
             WHERE e.id = ?
           `,
           [returnId]
@@ -149,7 +194,7 @@ const exerciseFunctions = {
         }
 
         // Get targets for this exercise
-        const [targets] = await db.pool.query(
+        const [exerciseTargets] = await db.pool.query(
           `
             SELECT
                 eto.name AS targetName
@@ -181,7 +226,7 @@ const exerciseFunctions = {
 
         const exerciseWithTargetsAndConfig = {
           ...exercise[0],
-          targets: targets.map((target) => target.targetName),
+          targets: exerciseTargets.map((target) => target.targetName),
           defaultConfiguration:
             machineConfig.length > 0 ? machineConfig[0] : null,
         };

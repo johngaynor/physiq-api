@@ -29,7 +29,8 @@ router.delete("/exercise/:id", canAccess(38), async (req, res) => {
 
 router.post("/exercise", canAccess(38), async (req, res) => {
   try {
-    const { id, name, defaultPrimaryUnit, defaultSecondaryUnit } = req.body;
+    const { id, name, defaultPrimaryUnit, defaultSecondaryUnit, targets } =
+      req.body;
 
     if (!name) {
       return res.status(400).json({ error: "Exercise name is required" });
@@ -40,6 +41,7 @@ router.post("/exercise", canAccess(38), async (req, res) => {
       name,
       defaultPrimaryUnit: defaultPrimaryUnit || null,
       defaultSecondaryUnit: defaultSecondaryUnit || null,
+      targets,
     });
 
     res.status(200).json({
