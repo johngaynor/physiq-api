@@ -7,13 +7,11 @@ const exerciseFunctions = {
         const [exercises] = await db.pool.query(
           `
             SELECT
-                e.id,
-                e.name,
-                pu.name AS primaryUnitType,
-                su.name AS secondaryUnitType
-            FROM exercises e
-            LEFT JOIN exercisesUnits pu ON e.defaultPrimaryUnit = pu.id
-            LEFT JOIN exercisesUnits su ON e.defaultSecondaryUnit = su.id
+                id,
+                name,
+                defaultPrimaryUnit,
+                defaultSecondaryUnit
+                from exercises
           `
         );
 
@@ -176,14 +174,11 @@ const exerciseFunctions = {
         const [exercise] = await db.pool.query(
           `
             SELECT
-                e.id,
-                e.name,
-                pu.name AS primaryUnitType,
-                su.name AS secondaryUnitType
-            FROM exercises e
-            LEFT JOIN exercisesUnits pu ON e.defaultPrimaryUnit = pu.id
-            LEFT JOIN exercisesUnits su ON e.defaultSecondaryUnit = su.id
-            WHERE e.id = ?
+                id,
+                name,
+                defaultPrimaryUnit,
+                defaultSecondaryUnit
+            WHERE id = ?
           `,
           [returnId]
         );
