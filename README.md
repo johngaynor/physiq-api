@@ -1,6 +1,4 @@
-<h1 align="center" id="title">PhysiQ API</h1>
-
-<p align="center"><img src="https://socialify.git.ci/johngaynor/physiq-api/image?language=1&amp;name=1&amp;owner=1&amp;pattern=Plus&amp;theme=Light" alt="project-image"></p>
+<p align="center"><img src="/assets/physiq-api.png" alt="project-image"></p>
 
 <p id="description">PhysiQ API — an Express.js server that powers the PhysiQ platform of applications with RESTful endpoints for authentication, training logs, check-ins, health metrics, and integrations.</p>
 
