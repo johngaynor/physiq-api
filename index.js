@@ -61,6 +61,6 @@ app.use((err, req, res, next) => {
   res.status(statusCode).json({ error: serializedError });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server listening on port: ${PORT}`);
 });
