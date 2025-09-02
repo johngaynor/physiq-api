@@ -259,7 +259,12 @@ const logFunctions = {
           );
         }
 
-        resolve("success");
+        const newLog = await db.pool.query(
+          "select * from sleepLogs where id = ?",
+          [logId]
+        );
+
+        resolve(newLog);
       } catch (e) {
         reject({ message: e.response?.data?.error || "Internal Server Error" });
       }
