@@ -185,18 +185,51 @@ const logFunctions = {
           [userId, date]
         );
 
-        if (!existing.length) {
-          const result = await axios.post(
-            "https://4apzgqqogvz2v5cduanzxtoyea0rupfx.lambda-url.us-east-2.on.aws/",
-            {
-              userId: userId,
-              date: date,
-              lambdaKey: config.ouraIntegrationApiKey,
-            }
-          );
+        if (existing.length) reject("Sleep data already exists for this date");
 
-          resolve(result.data);
-        } else resolve({});
+        const [keys] = await db.pool.query(
+          `
+        select * from usersIntegrations where userId = ? and type = 1
+          `,
+          [userId]
+        );
+
+        if (!keys.length) reject("No Oura integration found");
+
+        const result = await axios.post(
+          "https://z5332lvhfgtx5w7a2kvfyudyzi0gayoo.lambda-url.us-east-2.on.aws/",
+          {
+            ouraKey: keys[0].value,
+            lambdaKey: config.ouraIntegrationApiKey,
+          }
+        );
+
+        // Insert the sleep data into sleepLogs table
+        await db.pool.query(
+          `
+            INSERT INTO sleepLogs (userId, date, totalSleep, recoveryIndex, readinessScore, awakeQty, remQty, lightQty, deepQty, totalBed, bedtimeStart, bedtimeEnd, efficiency, latency, sleepScore, timingScore, restfulnessScore) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
+          `,
+          [
+            userId,
+            date,
+            result.data.totalSleep,
+            result.data.recoveryIndex,
+            result.data.readinessScore,
+            result.data.awakeQty,
+            result.data.remQty,
+            result.data.lightQty,
+            result.data.deepQty,
+            result.data.totalBed,
+            result.data.bedtimeStart,
+            result.data.bedtimeEnd,
+            result.data.efficiency,
+            result.data.latency,
+            result.data.sleepScore,
+            result.data.timingScore,
+            result.data.restfulnessScore,
+          ]
+        );
 
         resolve("success");
       } catch (e) {
