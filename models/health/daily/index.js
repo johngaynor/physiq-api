@@ -204,8 +204,10 @@ const logFunctions = {
           }
         );
 
+        const { sleep, tags } = result.data;
+
         // Insert the sleep data into sleepLogs table
-        await db.pool.query(
+        const [sleepResult] = await db.pool.query(
           `
             INSERT INTO sleepLogs (userId, date, totalSleep, recoveryIndex, readinessScore, awakeQty, remQty, lightQty, deepQty, totalBed, bedtimeStart, bedtimeEnd, efficiency, latency, sleepScore, timingScore, restfulnessScore) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
@@ -213,23 +215,49 @@ const logFunctions = {
           [
             userId,
             date,
-            result.data.totalSleep,
-            result.data.recoveryIndex,
-            result.data.readinessScore,
-            result.data.awakeQty,
-            result.data.remQty,
-            result.data.lightQty,
-            result.data.deepQty,
-            result.data.totalBed,
-            result.data.bedtimeStart,
-            result.data.bedtimeEnd,
-            result.data.efficiency,
-            result.data.latency,
-            result.data.sleepScore,
-            result.data.timingScore,
-            result.data.restfulnessScore,
+            sleep.totalSleep,
+            sleep.recoveryIndex,
+            sleep.readinessScore,
+            sleep.awakeQty,
+            sleep.remQty,
+            sleep.lightQty,
+            sleep.deepQty,
+            sleep.totalBed,
+            sleep.bedtimeStart,
+            sleep.bedtimeEnd,
+            sleep.efficiency,
+            sleep.latency,
+            sleep.sleepScore,
+            sleep.timingScore,
+            sleep.restfulnessScore,
           ]
         );
+
+        const logId = sleepResult.insertId;
+
+        // Insert tags if they exist
+        if (tags && tags.length > 0) {
+          const values = tags.map((tag) => {
+            return [
+              logId,
+              tag.id,
+              tag.tag_type_code,
+              tag.start_time,
+              tag.end_time,
+              tag.comment || null,
+              tag.qty || null,
+              tag.custom_name || null,
+            ];
+          });
+
+          // Bulk insert all tags
+          await db.pool.query(
+            `
+              INSERT INTO sleepLogsTags (logId, tagId, tagTypeCode, startTime, endTime, comment, qty, customName) VALUES ?
+            `,
+            [values]
+          );
+        }
 
         resolve("success");
       } catch (e) {
