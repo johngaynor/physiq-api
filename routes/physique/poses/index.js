@@ -49,62 +49,61 @@ router.post("/assign", canAccess(34), async (req, res) => {
 });
 
 // Upload file and forward to external API for pose analysis
-router.post("/analyze", canAccess(34), uploadPhotos.single("file"), async (req, res) => {
-  try {
-    const userId = req.auth?.userId;
+router.post(
+  "/analyze",
+  canAccess(34),
+  uploadPhotos.single("file"),
+  async (req, res) => {
+    try {
+      const userId = req.auth?.userId;
 
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
 
-    if (!req.file) {
-      return res.status(400).json({ error: "No file provided" });
-    }
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
 
-    // Get the file buffer from S3
-    const { getFileAsBlob } = require("../../../config/awsConfig");
-    const bucketName = process.env.POSE_CLASSIFICATION_BUCKET;
-    const fileBuffer = await getFileAsBlob(bucketName, req.file.key);
-
-    // Call the pose analysis model
-    const analysisResult = await poseAnalysis.analyzePose({
-      fileBuffer: fileBuffer.buffer,
-      filename: req.file.originalname,
-      mimetype: req.file.mimetype,
-      isTraining: 1,
-      userId,
-    });
-
-    // Return the analysis result to the frontend
-    res.status(200).json({
-      success: true,
-      fileUploaded: req.file.key,
-      analysisResult: analysisResult,
-    });
-  } catch (error) {
-    console.error("Error processing pose analysis:", error.message);
-
-    // Handle specific error types
-    if (error.response) {
-      // External API returned an error
-      res.status(error.response.status).json({
-        error: "Analysis API error",
-        details: error.response.data,
+      const analysisResult = await poseAnalysis.analyzePose({
+        filenames: [req.file.key],
+        isTraining: 1,
+        userId,
+        bucket: process.env.POSE_CLASSIFICATION_BUCKET,
       });
-    } else if (error.message?.includes("Invalid file type")) {
-      res
-        .status(400)
-        .json({ error: "Invalid file type. Only image files are allowed." });
-    } else if (error.message?.includes("File too large")) {
-      res
-        .status(400)
-        .json({ error: "File size too large. Maximum 10MB per file." });
-    } else {
-      res
-        .status(500)
-        .json({ error: "Failed to process file and call analysis API" });
+
+      // Return the analysis result to the frontend
+      res.status(200).json({
+        success: true,
+        fileUploaded: req.file.key,
+        analysisResult:
+          analysisResult.length > 1 ? analysisResult : analysisResult[0],
+      });
+    } catch (error) {
+      console.error("Error processing pose analysis:", error.message);
+
+      // Handle specific error types
+      if (error.response) {
+        // External API returned an error
+        res.status(error.response.status).json({
+          error: "Analysis API error",
+          details: error.response.data,
+        });
+      } else if (error.message?.includes("Invalid file type")) {
+        res
+          .status(400)
+          .json({ error: "Invalid file type. Only image files are allowed." });
+      } else if (error.message?.includes("File too large")) {
+        res
+          .status(400)
+          .json({ error: "File size too large. Maximum 10MB per file." });
+      } else {
+        res
+          .status(500)
+          .json({ error: "Failed to process file and call analysis API" });
+      }
     }
   }
-});
+);
 
 module.exports = router;

@@ -1,6 +1,5 @@
-const axios = require("axios");
-const FormData = require("form-data");
 const db = require("../../../config/database");
+const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 
 const poseAnalysis = {
   async getPoses() {
@@ -46,50 +45,85 @@ const poseAnalysis = {
     });
   },
 
-  async analyzePose({
-    fileBuffer,
-    filename,
-    mimetype,
-    isTraining = 0,
-    userId,
-  }) {
+  async analyzePose({ filenames, bucket, isTraining = 0, userId }) {
     return new Promise(async function (resolve, reject) {
       try {
-        // Create form data for FastAPI endpoint
-        const form = new FormData();
-        form.append("file", fileBuffer, {
-          filename: filename,
-          contentType: mimetype,
+        const lambdaClient = new LambdaClient({ region: "us-east-2" });
+        const payload = {
+          filenames,
+          bucket,
+        };
+        const uint8Payload = new TextEncoder().encode(JSON.stringify(payload));
+
+        const command = new InvokeCommand({
+          FunctionName: "pose-inference",
+          Payload: uint8Payload,
         });
 
-        // Send to FastAPI prediction endpoint
-        const externalApiResponse = await axios.post(
-          "https://physiq-inference-api.onrender.com/inference/predict/single",
-          form,
-          {
-            headers: {
-              ...form.getHeaders(),
-            },
-          }
+        const response = await lambdaClient.send(command);
+        const responsePayload = JSON.parse(
+          new TextDecoder("utf-8").decode(response.Payload)
         );
+        const body = JSON.parse(responsePayload.body);
+
+        // console.log(body);
 
         // insert logs
         await db.pool.query(
-          `INSERT INTO poseClassificationModelsCalls (modelId, userId, isTraining)
-        VALUES (
-          (SELECT MAX(id) FROM poseClassificationModels),
-          ?,
-          ?
-        )`,
-          [userId, isTraining]
+          `INSERT INTO poseClassificationModelsCalls (modelId, userId, isTraining, executionTime)
+            VALUES (
+              (SELECT MAX(id) FROM poseClassificationModels),
+              ?,
+              ?,
+              ?
+          )`,
+          [userId, isTraining, body.execution_time.total_time]
         );
-
-        resolve(externalApiResponse.data);
+        resolve(body.results);
       } catch (error) {
         reject(error);
       }
     });
   },
 };
+
+module.exports = poseAnalysis;
+
+// Create form data for FastAPI endpoint
+// const form = new FormData();
+// form.append("file", fileBuffer, {
+//   filename: filename,
+//   contentType: mimetype,
+// });
+
+// Send to FastAPI prediction endpoint
+// const externalApiResponse = await axios.post(
+//   "https://physiq-inference-api.onrender.com/inference/predict/single",
+//   form,
+//   {
+//     headers: {
+//       ...form.getHeaders(),
+//     },
+//   }
+// );
+
+// insert logs
+//         await db.pool.query(
+//           `INSERT INTO poseClassificationModelsCalls (modelId, userId, isTraining)
+//         VALUES (
+//           (SELECT MAX(id) FROM poseClassificationModels),
+//           ?,
+//           ?
+//         )`,
+//           [userId, isTraining]
+//         );
+
+//         resolve(externalApiResponse.data);
+//       } catch (error) {
+//         reject(error);
+//       }
+//     });
+//   },
+// };
 
 module.exports = poseAnalysis;
