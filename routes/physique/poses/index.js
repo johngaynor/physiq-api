@@ -68,7 +68,7 @@ router.post(
       // Extract all file keys
       const fileKeys = req.files.map((file) => file.key);
 
-      const analysisResult = await poseAnalysis.analyzePose({
+      const analysisResults = await poseAnalysis.analyzePose({
         filenames: fileKeys,
         isTraining: 1,
         userId,
@@ -76,11 +76,7 @@ router.post(
       });
 
       // Return the analysis result to the frontend
-      res.status(200).json({
-        success: true,
-        filesUploaded: fileKeys,
-        analysisResult,
-      });
+      res.status(200).json(analysisResults);
     } catch (error) {
       console.error("Error processing pose analysis:", error.message);
 
