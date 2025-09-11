@@ -48,11 +48,11 @@ router.post("/assign", canAccess(34), async (req, res) => {
   }
 });
 
-// Upload file and forward to external API for pose analysis
+// Upload files and forward to external API for pose analysis
 router.post(
   "/analyze",
   canAccess(34),
-  uploadPhotos.single("file"),
+  uploadPhotos.array("files", 10),
   async (req, res) => {
     try {
       const userId = req.auth?.userId;
@@ -61,12 +61,15 @@ router.post(
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      if (!req.file) {
-        return res.status(400).json({ error: "No file provided" });
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: "No files provided" });
       }
 
+      // Extract all file keys
+      const fileKeys = req.files.map((file) => file.key);
+
       const analysisResult = await poseAnalysis.analyzePose({
-        filenames: [req.file.key],
+        filenames: fileKeys,
         isTraining: 1,
         userId,
         bucket: process.env.POSE_CLASSIFICATION_BUCKET,
@@ -75,9 +78,8 @@ router.post(
       // Return the analysis result to the frontend
       res.status(200).json({
         success: true,
-        fileUploaded: req.file.key,
-        analysisResult:
-          analysisResult.length > 1 ? analysisResult : analysisResult[0],
+        filesUploaded: fileKeys,
+        analysisResult,
       });
     } catch (error) {
       console.error("Error processing pose analysis:", error.message);
@@ -100,7 +102,7 @@ router.post(
       } else {
         res
           .status(500)
-          .json({ error: "Failed to process file and call analysis API" });
+          .json({ error: "Failed to process files and call analysis API" });
       }
     }
   }
