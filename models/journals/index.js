@@ -88,6 +88,29 @@ const journalFunctions = {
       }
     });
   },
+
+  async deleteJournal(id, userId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [result] = await db.pool.query(
+          `
+            DELETE FROM journals
+            WHERE id = ? AND userId = ?
+          `,
+          [id, userId]
+        );
+
+        if (result.affectedRows === 0) {
+          reject(new Error("Journal not found or access denied"));
+          return;
+        }
+
+        resolve("Journal deleted successfully");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
 };
 
 module.exports = journalFunctions;

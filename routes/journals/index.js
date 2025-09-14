@@ -44,4 +44,25 @@ router.post("/journal", canAccess([42]), async (req, res) => {
   }
 });
 
+router.delete("/journal/:id", canAccess([42]), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.auth.userId;
+
+    if (!id) {
+      return res.status(400).json({ error: "Journal ID is required" });
+    }
+
+    await journalFunctions.deleteJournal(id, userId);
+    res.status(200).json({ message: "Journal deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting journal:", error);
+    if (error.message === "Journal not found or access denied") {
+      res.status(404).json({ error: "Journal not found or access denied" });
+    } else {
+      res.status(500).json({ error: "Failed to delete journal" });
+    }
+  }
+});
+
 module.exports = router;
