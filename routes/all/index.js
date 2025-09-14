@@ -34,4 +34,25 @@ router.post("/app/access", canAccess(1), async (req, res) => {
   res.status(200).json({ success: result });
 });
 
+router.post("/app/favorite", async (req, res) => {
+  try {
+    const { appId } = req.body;
+    const userId = req.auth?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (!appId) {
+      return res.status(400).json({ error: "App ID is required" });
+    }
+
+    const result = await allFunctions.toggleAppFavorite(userId, appId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error toggling app favorite:", error);
+    res.status(500).json({ error: "Failed to toggle app favorite" });
+  }
+});
+
 module.exports = router;

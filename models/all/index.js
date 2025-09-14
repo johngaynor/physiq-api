@@ -28,17 +28,20 @@ const allFunctions = {
         const [result] = await db.pool.query(
           `
           SELECT
-            id,
-            name,
-            description,
-            link,
-            allUsers,
-            restricted
-          FROM apps
-          WHERE allUsers = 1 or id in (
-            SELECT appId FROM usersApps WHERE userId = ?)
+            a.id,
+            a.name,
+            a.description,
+            a.link,
+            a.allUsers,
+            a.restricted,
+            CASE WHEN uaf.id IS NOT NULL THEN 1 ELSE 0 END AS favorite
+          FROM apps a
+          LEFT JOIN usersAppsFavorites uaf ON a.id = uaf.appId AND uaf.userId = ?
+          WHERE a.allUsers = 1 OR a.id IN (
+            SELECT appId FROM usersApps WHERE userId = ?
+          )
           `,
-          [userId]
+          [userId, userId]
         );
         resolve(result);
       } catch (error) {
@@ -104,6 +107,45 @@ const allFunctions = {
             [userId, appId]
           );
           resolve(true);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  async toggleAppFavorite(userId, appId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Check if the app is currently favorited
+        const [existing] = await db.pool.query(
+          `
+          SELECT id FROM usersAppsFavorites
+          WHERE userId = ? AND appId = ?
+          `,
+          [userId, appId]
+        );
+
+        if (existing.length > 0) {
+          // Remove from favorites
+          await db.pool.query(
+            `
+            DELETE FROM usersAppsFavorites
+            WHERE userId = ? AND appId = ?
+            `,
+            [userId, appId]
+          );
+          resolve({ isFavorite: false, message: "Removed from favorites" });
+        } else {
+          // Add to favorites
+          await db.pool.query(
+            `
+            INSERT INTO usersAppsFavorites (userId, appId)
+            VALUES (?, ?)
+            `,
+            [userId, appId]
+          );
+          resolve({ isFavorite: true, message: "Added to favorites" });
         }
       } catch (error) {
         reject(error);
