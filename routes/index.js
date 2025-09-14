@@ -6,4 +6,5 @@ module.exports = function (app) {
   app.use("/api/all", require("./all"));
   app.use("/api/ai", require("./ai"));
   app.use("/api/training", require("./training"));
+  app.use("/api/journals", require("./journals"));
 };
