@@ -26,10 +26,14 @@ router.post("/journal", canAccess([42]), async (req, res) => {
       });
     }
 
+    // Convert content to JSON string if it's an object
+    const contentToStore =
+      typeof content === "object" ? JSON.stringify(content) : content;
+
     const result = await journalFunctions.editJournal({
       id,
       title,
-      content,
+      content: contentToStore,
       userId,
     });
 
