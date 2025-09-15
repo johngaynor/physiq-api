@@ -55,11 +55,11 @@ const allFunctions = {
         const [result] = await db.pool.query(
           `
           select
-            d.stepsToday as DashboardStepsToday,
-            d.caloriesToday as DashboardCaloriesToday,
-            d.caloriesAdd as DashboardCaloriesAdd,
-            d.waterToday as DashboardWaterToday,
-            d.waterAdd as DashboardWaterAdd
+            d.stepsToday as dashboardStepsToday,
+            d.caloriesToday as dashboardCaloriesToday,
+            d.caloriesAdd as dashboardCaloriesAdd,
+            d.waterToday as dashboardWaterToday,
+            d.waterAdd as dashboardWaterAdd
           from settingsDashboard d
           where d.userId = ?
           `,
