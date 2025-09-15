@@ -19,7 +19,8 @@ router.post("/session", async (req, res) => {
 
   // get apps for user
   const apps = await allFunctions.getUserAccess(id);
-  res.status(200).json({ user: { id, email, name, apps }, existed });
+  const settings = await allFunctions.getUserSettings(id);
+  res.status(200).json({ user: { id, email, name, apps, settings }, existed });
 });
 
 router.get("/app/access/:userId", async (req, res) => {

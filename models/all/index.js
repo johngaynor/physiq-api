@@ -49,6 +49,29 @@ const allFunctions = {
       }
     });
   },
+  async getUserSettings(userId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [result] = await db.pool.query(
+          `
+          select
+            d.stepsToday as DashboardStepsToday,
+            d.caloriesToday as DashboardCaloriesToday,
+            d.caloriesAdd as DashboardCaloriesAdd,
+            d.waterToday as DashboardWaterToday,
+            d.waterAdd as DashboardWaterAdd
+          from settingsDashboard d
+          where d.userId = ?
+          `,
+          [userId]
+        );
+        const settings = result[0] || {};
+        resolve(settings);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
   async getUsers() {
     return new Promise(async function (resolve, reject) {
       try {
@@ -81,6 +104,11 @@ const allFunctions = {
             "INSERT INTO users (id, email, name) VALUES (?, ?, ?)",
             [id, email, name]
           );
+          await db.pool.query("INSERT INTO settingsDashboard (id) VALUES (?)", [
+            id,
+            email,
+            name,
+          ]);
           resolve(false); // User inserted
         }
       } catch (error) {
