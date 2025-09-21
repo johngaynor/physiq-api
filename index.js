@@ -11,22 +11,25 @@ const PORT = process.env.PORT || 3000;
 
 app.use(limiter);
 
-const allowedOrigins = {
-  production: [
-    "https://www.physiq.app",
-    "https://www.my.physiq.app",
-    "https://www.coach.physiq.app",
-  ],
-  development: "http://localhost:3001",
-  staging: "https://physiq-web-app-git-dev-john-gaynors-projects.vercel.app",
-};
+const allowedPatterns = [
+  /^http:\/\/localhost:3001$/, // dev
+  /^https:\/\/physiq-web-app-git-dev-john-gaynors-projects\.vercel\.app$/, // staging
+  /^https:\/\/([a-z0-9-]+\.)?physiq\.app$/, // production + subdomains
+];
 
 app.use(
   cors({
-    origin: allowedOrigins[process.env.NODE_ENV],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow non-browser requests (e.g. Postman)
+      if (allowedPatterns.some((pattern) => pattern.test(origin))) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS: " + origin));
+    },
     credentials: true,
   })
 );
+
 app.use(express.json());
 
 // authentication middleware
