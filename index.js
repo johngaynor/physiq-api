@@ -14,7 +14,8 @@ app.use(limiter);
 const allowedOrigins = {
   production: [
     "https://www.physiq.app",
-    "https://physiq-web-app-git-dev-john-gaynors-projects.vercel.app",
+    "https://www.my.physiq.app",
+    "https://www.coach.physiq.app",
   ],
   development: "http://localhost:3001",
   staging: "https://physiq-web-app-git-dev-john-gaynors-projects.vercel.app",
