@@ -104,11 +104,10 @@ const allFunctions = {
             "INSERT INTO users (id, email, name) VALUES (?, ?, ?)",
             [id, email, name]
           );
-          await db.pool.query("INSERT INTO settingsDashboard (id) VALUES (?)", [
-            id,
-            email,
-            name,
-          ]);
+          await db.pool.query(
+            "INSERT INTO settingsDashboard (userId) VALUES (?)",
+            [id, email, name]
+          );
           resolve(false); // User inserted
         }
       } catch (error) {
