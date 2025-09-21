@@ -18,10 +18,12 @@ module.exports = function canAccess(appIds) {
       if (results.some((result) => result)) {
         next();
       } else {
-        throw new Error(`You are not authorized to access this app`);
+        res
+          .status(403)
+          .json({ message: "You are not allowed to access this route." });
       }
     } catch (error) {
-      res.status(403).json({
+      res.status(400).json({
         message: `Error checking user privileges - ${error.message}`,
       });
     }

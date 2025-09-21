@@ -27,33 +27,33 @@ const localStorage = multer({
 });
 
 router.get("/", canAccess(28), async (req, res) => {
-  const userId = req.auth.userId;
-  const result = await checkInFunctions.getCheckIns(userId);
-  res.status(200).json(result);
+  try {
+    const userId = req.auth.userId;
+    const result = await checkInFunctions.getCheckIns(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.routeError("/checkins", error);
+  }
 });
 
-// Get all check-in comments for a specific check-in
 router.get("/comments/:checkInId", canAccess(28), async (req, res) => {
   try {
     const { checkInId } = req.params;
     const result = await checkInFunctions.getCheckInComments(checkInId);
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error getting check-in comments:", error);
-    res.status(500).json({ error: "Failed to get check-in comments" });
+    res.routeError("/checkins/comments/::", error);
   }
 });
 
-// Insert a new comment for a specific check-in
 router.post("/comments", canAccess(28), async (req, res) => {
   try {
     const userId = req.auth.userId;
     const { checkInId, comment } = req.body;
 
     // Validate comment
-    if (!comment || comment.trim() === "") {
-      return res.status(400).json({ error: "Comment is required" });
-    }
+    if (!comment || comment.trim() === "")
+      throw new Error("Comment is required.");
 
     const result = await checkInFunctions.insertCheckInComment(
       checkInId,
@@ -62,12 +62,10 @@ router.post("/comments", canAccess(28), async (req, res) => {
     );
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error inserting check-in comment:", error);
-    res.status(500).json({ error: "Failed to insert check-in comment" });
+    res.routeError("/checkins/comments", error);
   }
 });
 
-// Create or update check-in with optional photo upload
 router.post(
   "/",
   canAccess(28),
@@ -125,23 +123,7 @@ router.post(
         uploadedFiles: uploadedFileKeys,
       });
     } catch (error) {
-      console.error("Error creating/editing check-in:", error);
-
-      // Handle specific error types
-      if (
-        error.message?.includes("Invalid file type") ||
-        error.message?.includes("Only image files")
-      ) {
-        res
-          .status(400)
-          .json({ error: "Invalid file type. Only image files are allowed." });
-      } else if (error.message?.includes("File too large")) {
-        res
-          .status(400)
-          .json({ error: "File size too large. Maximum 10MB per file." });
-      } else {
-        res.status(500).json({ error: "Failed to create/edit check-in" });
-      }
+      res.routeError("/checkins", error);
     }
   }
 );
@@ -154,16 +136,10 @@ router.delete("/:id", canAccess(28), async (req, res) => {
     const result = await checkInFunctions.deleteCheckIn(userId, checkInId);
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error deleting check-in:", error);
-    if (error.message === "Check-in not found or unauthorized") {
-      res.status(404).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "Failed to delete check-in" });
-    }
+    res.routeError("/checkins/::", error);
   }
 });
 
-// Get attachments for a specific check-in
 router.get("/attachments/:id", canAccess(28), async (req, res) => {
   try {
     const userId = req.auth.userId;
@@ -172,16 +148,10 @@ router.get("/attachments/:id", canAccess(28), async (req, res) => {
     const result = await checkInFunctions.getCheckInAttachments(userId, id);
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error getting check-in attachments:", error);
-    if (error.message === "Check-in not found or unauthorized") {
-      res.status(404).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "Failed to get check-in attachments" });
-    }
+    res.routeError("/checkins/attachments/::", error);
   }
 });
 
-// Assign pose ID to a specific attachment
 router.post("/attachments/:id/pose", canAccess(28), async (req, res) => {
   try {
     const userId = req.auth.userId;
@@ -189,9 +159,8 @@ router.post("/attachments/:id/pose", canAccess(28), async (req, res) => {
     const { poseId } = req.body;
 
     // Validate poseId
-    if (poseId === undefined || poseId === null) {
-      return res.status(400).json({ error: "poseId is required" });
-    }
+    if (poseId === undefined || poseId === null)
+      throw new Error("Pose ID is required");
 
     const result = await checkInFunctions.assignPose(
       userId,
@@ -200,16 +169,10 @@ router.post("/attachments/:id/pose", canAccess(28), async (req, res) => {
     );
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error assigning pose ID:", error);
-    if (error.message === "Attachment not found or unauthorized") {
-      res.status(404).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "Failed to assign pose ID" });
-    }
+    res.routeError("/checkins/attachments/::/pose", error);
   }
 });
 
-// Send PDF to coach via email
 router.post(
   "/send",
   canAccess(28),
@@ -219,19 +182,11 @@ router.post(
       const { checkInId, date } = req.body;
       const userId = req.auth.userId;
 
-      if (!userId) {
-        return res.status(401).json({ error: "Authentication required" });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ error: "No file provided" });
-      }
+      if (!req.file) throw new Error("No file provided");
 
       // get coach email
       const email = await checkInFunctions.getCoachEmail(userId);
-      if (!email) {
-        return res.status(404).json({ error: "Coach email not found" });
-      }
+      if (!email) throw new Error("Coach email not found");
 
       // Send email with attachment
       await sendEmail(
@@ -263,8 +218,6 @@ router.post(
 
       res.status(200).json("success");
     } catch (error) {
-      console.error("Error sending file to coach:", error);
-
       // Clean up temp file in case of error
       if (req.file) {
         const fs = require("fs");
@@ -275,7 +228,7 @@ router.post(
         }
       }
 
-      res.status(400).json({ error });
+      res.routeError("/checkins/send", error);
     }
   }
 );

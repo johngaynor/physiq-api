@@ -7,11 +7,8 @@ router.post("/dashboard", canAccess([43]), async (req, res) => {
     const { key, value } = req.body;
     const userId = req.auth.userId;
 
-    if (!userId || !key || value === undefined) {
-      return res.status(400).json({
-        error: "User ID, key, and value are required",
-      });
-    }
+    if (!userId || !key || value === undefined)
+      throw new Error("Missing parameters of key or value.");
 
     const mappings = {
       dashboardWaterToday: "waterToday",
@@ -23,11 +20,7 @@ router.post("/dashboard", canAccess([43]), async (req, res) => {
 
     const column = mappings[key];
 
-    if (!column) {
-      return res.status(400).json({
-        error: "Invalid key provided",
-      });
-    }
+    if (!column) throw new Error("Invalid setting key");
 
     const result = await settingsFunctions.editDashboardSetting(
       userId,
@@ -37,10 +30,7 @@ router.post("/dashboard", canAccess([43]), async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error updating settings:", error);
-    res.status(400).json({
-      error: "Error updating settings",
-    });
+    res.routeError("/settings/dashboard", error);
   }
 });
 

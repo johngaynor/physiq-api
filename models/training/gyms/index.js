@@ -104,10 +104,7 @@ const gymFunctions = {
           [gymId]
         );
 
-        if (result.affectedRows === 0) {
-          reject(new Error("Gym not found"));
-          return;
-        }
+        if (result.affectedRows === 0) throw new Error("Gym not found");
 
         resolve("Success");
       } catch (error) {
@@ -160,10 +157,7 @@ const gymFunctions = {
             ]
           );
 
-          if (result.affectedRows === 0) {
-            reject(new Error("Gym not found"));
-            return;
-          }
+          if (result.affectedRows === 0) throw new Error("Gym not found");
         } else {
           // Insert new gym
           const [result] = await db.pool.query(
@@ -256,10 +250,7 @@ const gymFunctions = {
           [userId, returnId]
         );
 
-        if (!gymResult.length) {
-          reject(new Error("Failed to retrieve gym"));
-          return;
-        }
+        if (!gymResult.length) throw new Error("Failed to retrieve gym");
 
         // Get tags for this gym
         const [gymTags] = await db.pool.query(
@@ -314,10 +305,7 @@ const gymFunctions = {
           [gymId]
         );
 
-        if (!gymExists.length) {
-          reject(new Error("Gym not found"));
-          return;
-        }
+        if (!gymExists.length) throw new Error("Gym not found");
 
         // Get photos for the gym
         const [photos] = await db.pool.query(
@@ -395,10 +383,7 @@ const gymFunctions = {
           [gymId]
         );
 
-        if (!gymExists.length) {
-          reject(new Error("Gym not found"));
-          return;
-        }
+        if (!gymExists.length) throw new Error("Gym not found");
 
         // Insert each photo into the database
         const insertPromises = photoFilenames.map(async (filename) => {
@@ -438,28 +423,21 @@ const gymFunctions = {
           [photoId]
         );
 
-        if (!photoDetails.length) {
-          reject(new Error("Photo not found"));
-          return;
-        }
+        if (!photoDetails.length) throw new Error("Photo not found");
 
         const photo = photoDetails[0];
 
         // Optional: Check if user has permission to delete (creator or admin)
         // You can modify this logic based on your permission requirements
         if (photo.createdBy !== userId) {
-          // You might want to add additional admin check here
-          reject(new Error("Unauthorized to delete this photo"));
-          return;
+          throw new Error("Unauthorized to delete this photo");
         }
 
         // Delete from S3 first
         try {
           await deleteFile(bucketName, photo.s3Filename);
         } catch (s3Error) {
-          console.error("Error deleting from S3:", s3Error);
-          // You can decide whether to continue with database deletion or fail here
-          // For now, we'll continue and just log the error
+          throw new Error("Failed to delete photo from S3");
         }
 
         // Delete from database
@@ -471,10 +449,8 @@ const gymFunctions = {
           [photoId]
         );
 
-        if (result.affectedRows === 0) {
-          reject(new Error("Photo not found in database"));
-          return;
-        }
+        if (result.affectedRows === 0)
+          throw new Error("Photo not found in database");
 
         resolve({
           message: "Photo deleted successfully",
@@ -503,10 +479,8 @@ const gymFunctions = {
             [rating, review, id, userId]
           );
 
-          if (result.affectedRows === 0) {
-            reject(new Error("Review not found or unauthorized"));
-            return;
-          }
+          if (result.affectedRows === 0)
+            throw new Error("Review not found or unauthorized");
         } else {
           // Insert new review
           const [result] = await db.pool.query(
@@ -536,10 +510,7 @@ const gymFunctions = {
           [returnId]
         );
 
-        if (!reviewResult.length) {
-          reject(new Error("Failed to retrieve review"));
-          return;
-        }
+        if (!reviewResult.length) throw new Error("Failed to retrieve review");
 
         resolve(reviewResult[0]);
       } catch (error) {

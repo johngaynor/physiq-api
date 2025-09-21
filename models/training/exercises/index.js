@@ -81,8 +81,7 @@ const exerciseFunctions = {
         );
 
         if (result.affectedRows === 0) {
-          reject(new Error("Exercise not found"));
-          return;
+          throw new Error("Exercise not found");
         }
 
         resolve("Success");
@@ -114,10 +113,7 @@ const exerciseFunctions = {
             [name, defaultPrimaryUnit, defaultSecondaryUnit, id]
           );
 
-          if (result.affectedRows === 0) {
-            reject(new Error("Exercise not found"));
-            return;
-          }
+          if (result.affectedRows === 0) new Error("Exercise not found");
         } else {
           // Insert new exercise
           const [result] = await db.pool.query(
@@ -184,10 +180,7 @@ const exerciseFunctions = {
           [returnId]
         );
 
-        if (!exercise.length) {
-          reject(new Error("Failed to retrieve exercise"));
-          return;
-        }
+        if (!exercise.length) new Error("Failed to retrieve exercise");
 
         // Get targets for this exercise
         const [exerciseTargets] = await db.pool.query(

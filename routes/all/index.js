@@ -3,36 +3,58 @@ const canAccess = require("../../models/middleware/canAccess");
 const allFunctions = require("../../models/all");
 
 router.get("/apps", canAccess(1), async (req, res) => {
-  const result = await allFunctions.getApps();
-  res.status(200).json(result);
+  try {
+    const result = await allFunctions.getApps();
+    res.status(200).json(result);
+  } catch (error) {
+    res.routeError("/api/all/apps", error);
+  }
 });
 
 router.get("/users", canAccess(1), async (req, res) => {
-  const result = await allFunctions.getUsers();
-  res.status(200).json(result);
+  try {
+    const result = await allFunctions.getUsers();
+    res.status(200).json(result);
+  } catch (error) {
+    res.routeError("/api/all/users", error);
+  }
 });
 
 router.post("/session", async (req, res) => {
-  const { id, email, name } = req.body;
-  // authenticate user
-  const existed = await allFunctions.upsertUser(id, email, name);
+  try {
+    const { id, email, name } = req.body;
+    // authenticate user
+    const existed = await allFunctions.upsertUser(id, email, name);
 
-  // get apps for user
-  const apps = await allFunctions.getUserAccess(id);
-  const settings = await allFunctions.getUserSettings(id);
-  res.status(200).json({ user: { id, email, name, apps, settings }, existed });
+    // get apps for user
+    const apps = await allFunctions.getUserAccess(id);
+    const settings = await allFunctions.getUserSettings(id);
+    res
+      .status(200)
+      .json({ user: { id, email, name, apps, settings }, existed });
+  } catch (error) {
+    res.routeError("/api/all/session", error);
+  }
 });
 
 router.get("/app/access/:userId", async (req, res) => {
-  const userId = req.params.userId;
-  const result = await allFunctions.getUserAccess(userId);
-  res.status(200).json(result);
+  try {
+    const userId = req.params.userId;
+    const result = await allFunctions.getUserAccess(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.routeError("/api/all/app/access/::", error);
+  }
 });
 
 router.post("/app/access", canAccess(1), async (req, res) => {
-  const { userId, app, checked } = req.body;
-  const result = await allFunctions.updateAppAccess(userId, app.id, checked);
-  res.status(200).json({ success: result });
+  try {
+    const { userId, app, checked } = req.body;
+    const result = await allFunctions.updateAppAccess(userId, app.id, checked);
+    res.status(200).json({ success: result });
+  } catch (error) {
+    res.routeError("/api/all/app/access", error);
+  }
 });
 
 router.post("/app/favorite", async (req, res) => {
@@ -40,19 +62,12 @@ router.post("/app/favorite", async (req, res) => {
     const { appId } = req.body;
     const userId = req.auth?.userId;
 
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    if (!appId) {
-      return res.status(400).json({ error: "App ID is required" });
-    }
+    if (!appId) throw new Error("App ID is required");
 
     const result = await allFunctions.toggleAppFavorite(userId, appId);
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error toggling app favorite:", error);
-    res.status(500).json({ error: "Failed to toggle app favorite" });
+    res.routeError("/api/all/app/favorite", error);
   }
 });
 

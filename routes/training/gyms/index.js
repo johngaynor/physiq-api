@@ -7,28 +7,25 @@ const { upload } = require("../../../config/awsConfig");
 const uploadPhotos = upload(process.env.GYM_PHOTOS_BUCKET);
 
 router.get("/", canAccess(38), async (req, res) => {
-  const userId = req.auth.userId;
-  const result = await gymFunctions.getGyms(userId);
-  res.status(200).json(result);
+  try {
+    const userId = req.auth.userId;
+    const result = await gymFunctions.getGyms(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.routeError("/training/gyms", error);
+  }
 });
 
 router.delete("/gym/:id", canAccess(38), async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ error: "Gym ID is required" });
-    }
+    if (!id) throw new Error("Gym ID is required");
 
     await gymFunctions.deleteGym(id);
     res.status(200).json({ message: "Gym deleted successfully" });
   } catch (error) {
-    console.error("Error deleting gym:", error);
-    if (error.message === "Gym not found") {
-      res.status(404).json({ error: "Gym not found" });
-    } else {
-      res.status(500).json({ error: "Failed to delete gym" });
-    }
+    res.routeError("/training/gyms/gym/::", error);
   }
 });
 
@@ -41,12 +38,9 @@ router.post("/gym", canAccess(38), async (req, res) => {
     });
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error editing gym:", error);
-    if (error.message === "Gym not found") {
-      res.status(404).json({ error: "Gym not found" });
-    } else {
-      res.status(500).json({ error: "Failed to edit gym" });
-    }
+    res.routeError("/training/gyms/gym", error, {
+      notFound: error.message === "Gym not found",
+    });
   }
 });
 
@@ -57,12 +51,9 @@ router.get("/photos/:id", canAccess(38), async (req, res) => {
     const result = await gymFunctions.getGymPhotos(id);
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error getting gym photos:", error);
-    if (error.message === "Gym not found") {
-      res.status(404).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "Failed to get gym photos" });
-    }
+    res.routeError("/training/gyms/photos/::", error, {
+      notFound: error.message === "Gym not found",
+    });
   }
 });
 
@@ -75,16 +66,12 @@ router.post(
       const userId = req.auth.userId;
       const { gymId } = req.body;
 
-      if (!gymId) {
-        return res.status(400).json({ error: "Gym ID is required" });
-      }
+      if (!gymId) throw new Error("Gym ID is required");
 
       // Get uploaded files info from S3
       const uploadedFiles = req.files || [];
 
-      if (uploadedFiles.length === 0) {
-        return res.status(400).json({ error: "No photos were uploaded" });
-      }
+      if (uploadedFiles.length === 0) throw new Error("No files were uploaded");
 
       const uploadedFileKeys = uploadedFiles.map((file) => file.key);
 
@@ -100,12 +87,7 @@ router.post(
         ...result,
       });
     } catch (error) {
-      console.error("Error uploading gym photos:", error);
-      if (error.message === "Gym not found") {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: "Failed to upload gym photos" });
-      }
+      res.routeError("/training/gyms/photos", error);
     }
   }
 );
@@ -115,9 +97,7 @@ router.delete("/photos/:id", canAccess(38), async (req, res) => {
     const userId = req.auth.userId;
     const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ error: "Photo ID is required" });
-    }
+    if (!id) throw new Error("Photo ID is required");
 
     const result = await gymFunctions.deleteGymPhoto(id, userId);
 
@@ -126,14 +106,7 @@ router.delete("/photos/:id", canAccess(38), async (req, res) => {
       ...result,
     });
   } catch (error) {
-    console.error("Error deleting gym photo:", error);
-    if (error.message === "Photo not found") {
-      res.status(404).json({ error: error.message });
-    } else if (error.message === "Unauthorized to delete this photo") {
-      res.status(403).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "Failed to delete gym photo" });
-    }
+    res.routeError("/training/gyms/photos/::", error);
   }
 });
 
@@ -144,12 +117,9 @@ router.get("/reviews/:id", canAccess(38), async (req, res) => {
     const result = await gymFunctions.getGymReviews(id);
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error getting gym reviews:", error);
-    if (error.message === "Gym not found") {
-      res.status(404).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "Failed to get gym reviews" });
-    }
+    res.routeError("/training/gyms/reviews/::id", error, {
+      notFound: error.message === "Gym not found",
+    });
   }
 });
 
@@ -160,13 +130,11 @@ router.post("/review", canAccess(38), async (req, res) => {
 
     // Validate required fields
     if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+      throw new Error("Rating must be between 1 and 5");
     }
 
     if (!id && !gymId) {
-      return res
-        .status(400)
-        .json({ error: "Gym ID is required for new reviews" });
+      throw new Error("Gym ID is required for new reviews");
     }
 
     const result = await gymFunctions.upsertGymReview({
@@ -179,14 +147,7 @@ router.post("/review", canAccess(38), async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error creating/updating review:", error);
-    if (error.message === "Review not found or unauthorized") {
-      res.status(404).json({ error: error.message });
-    } else if (error.message === "Failed to retrieve review") {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "Failed to save review" });
-    }
+    res.routeError("/training/gyms/review", error);
   }
 });
 

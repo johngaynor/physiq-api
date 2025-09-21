@@ -8,10 +8,7 @@ router.get("/", canAccess([42]), async (req, res) => {
     const journals = await journalFunctions.getJournals(userId);
     res.status(200).json(journals);
   } catch (error) {
-    console.error("Error getting journals:", error);
-    res.status(500).json({
-      error: "Error retrieving journals",
-    });
+    res.routeError("/journals", error);
   }
 });
 
@@ -20,11 +17,8 @@ router.post("/journal", canAccess([42]), async (req, res) => {
     const { id, title, content } = req.body;
     const userId = req.auth.userId;
 
-    if (!id || !title || !content) {
-      return res.status(400).json({
-        error: "ID, title, and content are required",
-      });
-    }
+    if (!id || !title || !content)
+      throw new Error("ID, title, and content are required");
 
     // Convert content to JSON string if it's an object
     const contentToStore =
@@ -39,12 +33,9 @@ router.post("/journal", canAccess([42]), async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error editing journal:", error);
-    if (error.message === "ID is required") {
-      res.status(400).json({ error: "ID is required" });
-    } else {
-      res.status(500).json({ error: "Failed to save journal" });
-    }
+    res.routeError("/journals/journal", error, {
+      validation: error.message === "ID is required",
+    });
   }
 });
 
@@ -53,19 +44,12 @@ router.delete("/journal/:id", canAccess([42]), async (req, res) => {
     const { id } = req.params;
     const userId = req.auth.userId;
 
-    if (!id) {
-      return res.status(400).json({ error: "Journal ID is required" });
-    }
+    if (!id) throw new Error("Journal ID is required");
 
     await journalFunctions.deleteJournal(id, userId);
     res.status(200).json({ message: "Journal deleted successfully" });
   } catch (error) {
-    console.error("Error deleting journal:", error);
-    if (error.message === "Journal not found or access denied") {
-      res.status(404).json({ error: "Journal not found or access denied" });
-    } else {
-      res.status(500).json({ error: "Failed to delete journal" });
-    }
+    res.routeError("/journals/journal/::id", error);
   }
 });
 

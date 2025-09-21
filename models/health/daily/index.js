@@ -185,7 +185,8 @@ const logFunctions = {
           [userId, date]
         );
 
-        if (existing.length) reject("Sleep data already exists for this date");
+        if (existing.length)
+          throw new Error("Sleep data already exists for this date");
 
         const [keys] = await db.pool.query(
           `
@@ -194,7 +195,7 @@ const logFunctions = {
           [userId]
         );
 
-        if (!keys.length) reject("No Oura integration found");
+        if (!keys.length) throw new Error("No Oura integration found");
 
         const result = await axios.post(
           "https://z5332lvhfgtx5w7a2kvfyudyzi0gayoo.lambda-url.us-east-2.on.aws/",
@@ -265,8 +266,8 @@ const logFunctions = {
         );
 
         resolve(newLog);
-      } catch (e) {
-        reject({ message: e.response?.data?.error || "Internal Server Error" });
+      } catch (error) {
+        reject(error);
       }
     });
   },

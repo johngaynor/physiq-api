@@ -2,6 +2,7 @@ const router = require("express").Router();
 const canAccess = require("../../../models/middleware/canAccess");
 const sessionFunctions = require("../../../models/training/sessions");
 
+// not modifying for now until I get back to the training functionality
 router.get("/", canAccess(38), async (req, res) => {
   try {
     const userId = req.auth.userId;
