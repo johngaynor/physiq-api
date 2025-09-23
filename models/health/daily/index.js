@@ -239,7 +239,6 @@ const logFunctions = {
         // Insert tags if they exist
         if (tags && tags.length > 0) {
           const values = tags.map((tag) => [
-            logId,
             tag.tagId,
             tag.tagTypeCode,
             tag.startTime,
