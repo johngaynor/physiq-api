@@ -238,19 +238,16 @@ const logFunctions = {
 
         // Insert tags if they exist
         if (tags && tags.length > 0) {
-          const values = tags.map((tag) => {
-            return [
-              logId,
-              tag.id,
-              tag.tag_type_code,
-              tag.start_time,
-              tag.end_time,
-              tag.comment || null,
-              tag.qty || null,
-              tag.custom_name || null,
-            ];
-          });
-
+          const values = tags.map((tag) => [
+            logId,
+            tag.tagId,
+            tag.tagTypeCode,
+            tag.startTime,
+            tag.endTime,
+            tag.comment,
+            tag.qty,
+            tag.customName,
+          ]);
           // Bulk insert all tags
           await db.pool.query(
             `
