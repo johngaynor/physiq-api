@@ -236,26 +236,26 @@ const logFunctions = {
 
         const logId = sleepResult.insertId;
 
-        // Insert tags if they exist
-        if (tags && tags.length > 0) {
-          const values = tags.map((tag) => [
-            tag.tagId,
-            tag.tagTypeCode,
-            tag.startTime,
-            tag.endTime,
-            tag.comment,
-            tag.qty,
-            tag.customName,
-            userId,
-          ]);
-          // Bulk insert all tags
-          await db.pool.query(
-            `
-              INSERT INTO sleepLogsTags (tagId, tagTypeCode, startTime, endTime, comment, qty, customName, userId) VALUES ?
-            `,
-            [values]
-          );
-        }
+        // Insert tags if they exist... removing for now while I debug and get historical backfill
+        // if (tags && tags.length > 0) {
+        //   const values = tags.map((tag) => [
+        //     tag.tagId,
+        //     tag.tagTypeCode,
+        //     tag.startTime,
+        //     tag.endTime,
+        //     tag.comment,
+        //     tag.qty,
+        //     tag.customName,
+        //     userId,
+        //   ]);
+        //   // Bulk insert all tags
+        //   await db.pool.query(
+        //     `
+        //       INSERT INTO sleepLogsTags (tagId, tagTypeCode, startTime, endTime, comment, qty, customName, userId) VALUES ?
+        //     `,
+        //     [values]
+        //   );
+        // }
 
         const newLog = await db.pool.query(
           "select * from sleepLogs where id = ?",
