@@ -246,11 +246,12 @@ const logFunctions = {
             tag.comment,
             tag.qty,
             tag.customName,
+            userId,
           ]);
           // Bulk insert all tags
           await db.pool.query(
             `
-              INSERT INTO sleepLogsTags (logId, tagId, tagTypeCode, startTime, endTime, comment, qty, customName) VALUES ?
+              INSERT INTO sleepLogsTags (tagId, tagTypeCode, startTime, endTime, comment, qty, customName, userId) VALUES ?
             `,
             [values]
           );
