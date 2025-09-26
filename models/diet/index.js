@@ -307,7 +307,8 @@ const dietFunctions = {
               cardioMinutes,
               notes, 
               water, 
-              steps
+              steps,
+              phase
           from dietLogs
           where userId = ?
           order by effectiveDate desc

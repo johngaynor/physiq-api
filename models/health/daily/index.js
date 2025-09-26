@@ -35,11 +35,12 @@ const logFunctions = {
         LEFT JOIN users api 
             ON api.id = log.userId
         LEFT JOIN dietLogs dlog
-            on dlog.effectiveDate = (
-                SELECT MAX(effectiveDate)
-                FROM dietLogs
-                WHERE effectiveDate <= log.date AND userId = log.userId
-            )
+          ON dlog.userId = log.userId
+          AND dlog.effectiveDate = (
+              SELECT MAX(effectiveDate)
+              FROM dietLogs
+              WHERE effectiveDate <= log.date AND userId = log.userId
+          )
         WHERE api.id = ?
         UNION
         SELECT 
@@ -69,11 +70,12 @@ const logFunctions = {
         LEFT JOIN users api 
             ON api.id = slp.userId
         LEFT JOIN dietLogs dlog
-            on dlog.effectiveDate = (
-                SELECT MAX(effectiveDate)
-                FROM dietLogs
-                WHERE effectiveDate <= log.date AND userId = log.userId
-            )
+          ON dlog.userId = log.userId
+          AND dlog.effectiveDate = (
+              SELECT MAX(effectiveDate)
+              FROM dietLogs
+              WHERE effectiveDate <= log.date AND userId = log.userId
+          )
         WHERE api.id = ?
           AND log.date IS NULL
         `,
