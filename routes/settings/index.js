@@ -6,9 +6,6 @@ router.post("/dashboard", canAccess([43]), async (req, res) => {
   try {
     const userId = req.auth.userId;
     const settings = req.body;
-
-    if (!userId) throw new Error("Missing user ID");
-
     const result = await settingsFunctions.editDashboardSettings(
       userId,
       settings
@@ -24,9 +21,6 @@ router.post("/event", canAccess([43]), async (req, res) => {
   try {
     const userId = req.auth.userId;
     const settings = req.body;
-
-    if (!userId) throw new Error("Missing user ID");
-
     const result = await settingsFunctions.editEventSettings(userId, settings);
 
     res.status(200).json(result);
