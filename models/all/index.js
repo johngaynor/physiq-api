@@ -62,7 +62,8 @@ const allFunctions = {
             d.waterAdd as dashboardWaterAdd,
             e.type as eventType,
             e.name as eventName,
-            e.date as eventDate
+            e.startDate as eventStartDate,
+            e.endDate as eventEndDate
           from settingsDashboard d
           left join settingsEvent e on d.userId = e.userId
           where d.userId = ?

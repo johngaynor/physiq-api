@@ -41,7 +41,7 @@ const settingsFunctions = {
   async editEventSettings(userId, settings) {
     return new Promise(async function (resolve, reject) {
       try {
-        const { eventType, eventName, endDate, startDate } = settings;
+        const { eventType, eventName, eventEndDate, eventStartDate } = settings;
 
         await db.pool.query(
           `
@@ -52,7 +52,7 @@ const settingsFunctions = {
                 startDate = ?
             WHERE userId = ?
           `,
-          [eventType, eventName, endDate, startDate, userId]
+          [eventType, eventName, eventEndDate, eventStartDate, userId]
         );
 
         resolve("success");
