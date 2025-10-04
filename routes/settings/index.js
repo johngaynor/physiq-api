@@ -4,33 +4,34 @@ const settingsFunctions = require("../../models/settings");
 
 router.post("/dashboard", canAccess([43]), async (req, res) => {
   try {
-    const { key, value } = req.body;
     const userId = req.auth.userId;
+    const settings = req.body;
 
-    if (!userId || !key || value === undefined)
-      throw new Error("Missing parameters of key or value.");
+    if (!userId) throw new Error("Missing user ID");
 
-    const mappings = {
-      dashboardWaterToday: "waterToday",
-      dashboardWaterAdd: "waterAdd",
-      dashboardCaloriesToday: "caloriesToday",
-      dashboardCaloriesAdd: "caloriesAdd",
-      dashboardStepsToday: "stepsToday",
-    };
-
-    const column = mappings[key];
-
-    if (!column) throw new Error("Invalid setting key");
-
-    const result = await settingsFunctions.editDashboardSetting(
+    const result = await settingsFunctions.editDashboardSettings(
       userId,
-      column,
-      value
+      settings
     );
 
     res.status(200).json(result);
   } catch (error) {
     res.routeError("/settings/dashboard", error);
+  }
+});
+
+router.post("/event", canAccess([43]), async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const settings = req.body;
+
+    if (!userId) throw new Error("Missing user ID");
+
+    const result = await settingsFunctions.editEventSettings(userId, settings);
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.routeError("/settings/event", error);
   }
 });
 

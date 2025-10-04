@@ -59,8 +59,12 @@ const allFunctions = {
             d.caloriesToday as dashboardCaloriesToday,
             d.caloriesAdd as dashboardCaloriesAdd,
             d.waterToday as dashboardWaterToday,
-            d.waterAdd as dashboardWaterAdd
+            d.waterAdd as dashboardWaterAdd,
+            e.type as eventType,
+            e.name as eventName,
+            e.date as eventDate
           from settingsDashboard d
+          left join settingsEvent e on d.userId = e.userId
           where d.userId = ?
           `,
           [userId]
