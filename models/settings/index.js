@@ -4,8 +4,13 @@ const settingsFunctions = {
   async editDashboardSettings(userId, settings) {
     return new Promise(async function (resolve, reject) {
       try {
-        const { waterToday, waterAdd, caloriesToday, caloriesAdd, stepsToday } =
-          settings;
+        const {
+          dashboardWaterToday,
+          dashboardWaterAdd,
+          dashboardCaloriesToday,
+          dashboardCaloriesAdd,
+          dashboardStepsToday,
+        } = settings;
 
         await db.pool.query(
           `
@@ -17,7 +22,14 @@ const settingsFunctions = {
                 stepsToday = ?
             WHERE userId = ?
           `,
-          [waterToday, waterAdd, caloriesToday, caloriesAdd, stepsToday, userId]
+          [
+            dashboardWaterToday,
+            dashboardWaterAdd,
+            dashboardCaloriesToday,
+            dashboardCaloriesAdd,
+            dashboardStepsToday,
+            userId,
+          ]
         );
 
         resolve("success");
@@ -29,7 +41,7 @@ const settingsFunctions = {
   async editEventSettings(userId, settings) {
     return new Promise(async function (resolve, reject) {
       try {
-        const { type, name, date } = settings;
+        const { eventType, eventName, eventDate } = settings;
 
         await db.pool.query(
           `
@@ -39,7 +51,7 @@ const settingsFunctions = {
                 date = ?
             WHERE userId = ?
           `,
-          [type, name, date, userId]
+          [eventType, eventName, eventDate, userId]
         );
 
         resolve("success");
