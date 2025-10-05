@@ -8,4 +8,5 @@ module.exports = function (app) {
   app.use("/api/training", require("./training"));
   app.use("/api/journals", require("./journals"));
   app.use("/api/settings", require("./settings"));
+  app.use("/api/phases", require("./phases"));
 };
