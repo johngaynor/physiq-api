@@ -33,6 +33,88 @@ const phaseFunctions = {
         const { id, name, type, startDate, endDate, description } = phaseData;
         let phaseId;
 
+        // Check for overlapping phases
+        // A phase overlaps if:
+        // 1. The new phase starts before an existing phase ends AND
+        // 2. The new phase ends after an existing phase starts (or has no end date)
+        const overlapQuery = id
+          ? // For updates, exclude the current phase from the check
+            `
+            SELECT id, name, startDate, endDate
+            FROM phases
+            WHERE userId = ?
+              AND id != ?
+              AND (
+                (startDate <= ? AND (endDate IS NULL OR endDate >= ?))
+                OR
+                (startDate <= ? AND (endDate IS NULL OR endDate >= ?))
+                OR
+                (startDate >= ? AND (? IS NULL OR endDate <= ?))
+              )
+            `
+          : // For inserts, check all phases
+            `
+            SELECT id, name, startDate, endDate
+            FROM phases
+            WHERE userId = ?
+              AND (
+                (startDate <= ? AND (endDate IS NULL OR endDate >= ?))
+                OR
+                (startDate <= ? AND (endDate IS NULL OR endDate >= ?))
+                OR
+                (startDate >= ? AND (? IS NULL OR endDate <= ?))
+              )
+            `;
+
+        const overlapParams = id
+          ? [
+              userId,
+              id,
+              startDate,
+              startDate,
+              endDate || startDate,
+              endDate || startDate,
+              startDate,
+              endDate,
+              endDate,
+            ]
+          : [
+              userId,
+              startDate,
+              startDate,
+              endDate || startDate,
+              endDate || startDate,
+              startDate,
+              endDate,
+              endDate,
+            ];
+
+        const [overlappingPhases] = await db.pool.query(
+          overlapQuery,
+          overlapParams
+        );
+
+        if (overlappingPhases.length > 0) {
+          const overlapDetails = overlappingPhases
+            .map((phase) => {
+              const formatDate = (date) => {
+                if (!date) return "ongoing";
+                return new Date(date).toISOString().split("T")[0];
+              };
+              return `"${phase.name}" (${formatDate(
+                phase.startDate
+              )} to ${formatDate(phase.endDate)})`;
+            })
+            .join(", ");
+
+          reject(
+            new Error(
+              `Phase dates overlap with existing phase(s): ${overlapDetails}`
+            )
+          );
+          return;
+        }
+
         if (id) {
           // Update existing phase
           await db.pool.query(
