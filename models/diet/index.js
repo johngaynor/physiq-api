@@ -17,8 +17,7 @@ const dietFunctions = {
                 cardioMinutes, 
                 notes,
                 water, 
-                steps,
-                phase
+                steps
             FROM dietLogs
             WHERE userId = ?
         `,
@@ -81,7 +80,6 @@ const dietFunctions = {
       notes,
       water,
       steps,
-      phase,
       supplements,
     }
   ) {
@@ -107,7 +105,6 @@ const dietFunctions = {
                 notes = ?,
                 water = ?,
                 steps = ?,
-                phase = ?,
                 recentSubmitTime = ?
               WHERE id = ?
               AND userId = ?
@@ -123,7 +120,6 @@ const dietFunctions = {
               notes,
               water,
               steps,
-              phase,
               currentTime,
               id,
               userId,
@@ -169,11 +165,9 @@ const dietFunctions = {
                 notes,
                 water,
                 steps,
-                phase,
                 recentSubmitTime
               )
               VALUES (
-                ?,
                 ?,
                 ?,
                 ?,
@@ -200,7 +194,6 @@ const dietFunctions = {
               notes,
               water,
               steps,
-              phase,
               currentTime,
             ]
           );
@@ -241,8 +234,7 @@ const dietFunctions = {
                 cardioMinutes, 
                 notes,
                 water, 
-                steps,
-                phase
+                steps
             FROM dietLogs
             WHERE id = ?
               AND userId = ?
@@ -307,8 +299,7 @@ const dietFunctions = {
               cardioMinutes,
               notes, 
               water, 
-              steps,
-              phase
+              steps
           from dietLogs
           where userId = ?
           order by effectiveDate desc
