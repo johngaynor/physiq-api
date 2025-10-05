@@ -38,29 +38,6 @@ const settingsFunctions = {
       }
     });
   },
-  async editEventSettings(userId, settings) {
-    return new Promise(async function (resolve, reject) {
-      try {
-        const { eventType, eventName, eventEndDate, eventStartDate } = settings;
-
-        await db.pool.query(
-          `
-            UPDATE settingsEvent 
-            SET type = ?, 
-                name = ?, 
-                endDate = ?,
-                startDate = ?
-            WHERE userId = ?
-          `,
-          [eventType, eventName, eventEndDate, eventStartDate, userId]
-        );
-
-        resolve("success");
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
 };
 
 module.exports = settingsFunctions;

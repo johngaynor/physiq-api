@@ -17,16 +17,4 @@ router.post("/dashboard", canAccess([43]), async (req, res) => {
   }
 });
 
-router.post("/event", canAccess([43]), async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const settings = req.body;
-    const result = await settingsFunctions.editEventSettings(userId, settings);
-
-    res.status(200).json(result);
-  } catch (error) {
-    res.routeError("/settings/event", error);
-  }
-});
-
 module.exports = router;
