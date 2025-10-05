@@ -10,6 +10,7 @@ const phaseFunctions = {
             id,
             userId,
             name,
+            type,
             startDate,
             endDate,
             description
@@ -29,7 +30,7 @@ const phaseFunctions = {
   async editPhase(userId, phaseData) {
     return new Promise(async function (resolve, reject) {
       try {
-        const { id, name, startDate, endDate, description } = phaseData;
+        const { id, name, type, startDate, endDate, description } = phaseData;
         let phaseId;
 
         if (id) {
@@ -38,22 +39,23 @@ const phaseFunctions = {
             `
             UPDATE phases
             SET name = ?,
+                type = ?,
                 startDate = ?,
                 endDate = ?,
                 description = ?
             WHERE id = ? AND userId = ?
             `,
-            [name, startDate, endDate, description, id, userId]
+            [name, type, startDate, endDate, description, id, userId]
           );
           phaseId = id;
         } else {
           // Insert new phase
           const [result] = await db.pool.query(
             `
-            INSERT INTO phases (userId, name, startDate, endDate, description)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO phases (userId, name, type, startDate, endDate, description)
+            VALUES (?, ?, ?, ?, ?, ?)
             `,
-            [userId, name, startDate, endDate, description]
+            [userId, name, type, startDate, endDate, description]
           );
           phaseId = result.insertId;
         }
@@ -65,6 +67,7 @@ const phaseFunctions = {
             id,
             userId,
             name,
+            type,
             startDate,
             endDate,
             description
