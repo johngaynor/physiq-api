@@ -9,4 +9,5 @@ module.exports = function (app) {
   app.use("/api/journals", require("./journals"));
   app.use("/api/settings", require("./settings"));
   app.use("/api/phases", require("./phases"));
+  app.use("/api/supplements", require("./supplements"));
 };
