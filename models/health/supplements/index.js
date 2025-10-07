@@ -1,7 +1,7 @@
 const db = require("../../../config/database");
 
 const supplementFunctions = {
-  async getSupplements() {
+  async getSupplements(userId) {
     return new Promise(async function (resolve, reject) {
       try {
         // Get supplements
@@ -9,12 +9,16 @@ const supplementFunctions = {
           `
           SELECT
             id,
+            userId,
             name,
-            description
+            description,
+            dosage, 
+            unit
           FROM supplements
-          WHERE active = 1
+          WHERE userId is null or userId = ?
           ORDER BY id DESC
-          `
+          `,
+          [userId]
         );
 
         // Get tags for each supplement

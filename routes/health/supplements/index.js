@@ -4,7 +4,8 @@ const supplementFunctions = require("../../../models/health/supplements");
 
 router.get("/", canAccess(29), async (req, res) => {
   try {
-    const result = await supplementFunctions.getSupplements();
+    const userId = req.auth.userId;
+    const result = await supplementFunctions.getSupplements(userId);
     res.status(200).json(result);
   } catch (error) {
     res.routeError("/health/supplements", error);
