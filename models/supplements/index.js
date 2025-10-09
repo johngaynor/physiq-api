@@ -158,7 +158,8 @@ const supplementFunctions = {
           SELECT
             id,
             supplementId,
-            link
+            link,
+            title
           FROM supplementsLinks
           WHERE supplementId = ?
           `,
@@ -173,7 +174,7 @@ const supplementFunctions = {
   async editSupplementLink(userId, linkData) {
     return new Promise(async function (resolve, reject) {
       try {
-        const { id, supplementId, link } = linkData;
+        const { id, supplementId, link, title } = linkData;
         let linkId;
 
         // If updating an existing link, verify ownership of the supplement
@@ -202,10 +203,11 @@ const supplementFunctions = {
           await db.pool.query(
             `
             UPDATE supplementsLinks
-            SET link = ?
+            SET link = ?,
+                title = ?
             WHERE id = ?
             `,
-            [link, id]
+            [link, title, id]
           );
           linkId = id;
         } else {
@@ -230,10 +232,10 @@ const supplementFunctions = {
           // Insert new link
           const [result] = await db.pool.query(
             `
-            INSERT INTO supplementsLinks (supplementId, link)
-            VALUES (?, ?)
+            INSERT INTO supplementsLinks (supplementId, link, title)
+            VALUES (?, ?, ?)
             `,
-            [supplementId, link]
+            [supplementId, link, title]
           );
           linkId = result.insertId;
         }
@@ -244,7 +246,8 @@ const supplementFunctions = {
           SELECT
             id,
             supplementId,
-            link
+            link,
+            title
           FROM supplementsLinks
           WHERE id = ?
           `,
