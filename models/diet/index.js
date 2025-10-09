@@ -31,6 +31,7 @@ const dietFunctions = {
                 supp.logId,
                 supp.supplementId,
                 supp.dosage,
+                supp.unit,
                 supp.frequency,
                 s.name as name,
                 s.description as description
@@ -55,6 +56,7 @@ const dietFunctions = {
                 name: supp.name,
                 description: supp.description,
                 dosage: supp.dosage,
+                unit: supp.unit,
                 frequency: supp.frequency,
               })),
           };
@@ -139,11 +141,12 @@ const dietFunctions = {
               id,
               supp.supplementId,
               supp.dosage,
+              supp.unit,
               supp.frequency,
             ]);
             await db.pool.query(
               `
-                INSERT INTO dietLogsSupplements (logId, supplementId, dosage, frequency)
+                INSERT INTO dietLogsSupplements (logId, supplementId, dosage, unit, frequency)
                 VALUES ?
               `,
               [supplementValues]
@@ -206,11 +209,12 @@ const dietFunctions = {
               newId,
               supp.supplementId,
               supp.dosage,
+              supp.unit,
               supp.frequency,
             ]);
             await db.pool.query(
               `
-                INSERT INTO dietLogsSupplements (logId, supplementId, dosage, frequency)
+                INSERT INTO dietLogsSupplements (logId, supplementId, dosage, unit, frequency)
                 VALUES ?
               `,
               [supplementValues]
@@ -247,6 +251,7 @@ const dietFunctions = {
                 supp.id,
                 supp.supplementId,
                 supp.dosage,
+                supp.unit,
                 supp.frequency,
                 s.name as name,
                 s.description as description
@@ -322,6 +327,7 @@ const dietFunctions = {
               id,
               supplementId,
               dosage,
+              unit,
               frequency
           from dietLogsSupplements
           where logId = ?
