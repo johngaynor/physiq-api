@@ -82,7 +82,8 @@ const supplementFunctions = {
   async editSupplement(userId, supplementData) {
     return new Promise(async function (resolve, reject) {
       try {
-        const { id, name, description, dosage, unit, frequency } = supplementData;
+        const { id, name, description, dosage, unit, frequency } =
+          supplementData;
         let supplementId;
 
         if (id) {
