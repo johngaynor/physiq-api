@@ -12,7 +12,8 @@ const supplementFunctions = {
             name,
             description,
             dosage, 
-            unit
+            unit,
+            frequency
           FROM supplements
           WHERE userId is null or userId = ?
           ORDER BY id DESC
@@ -81,7 +82,7 @@ const supplementFunctions = {
   async editSupplement(userId, supplementData) {
     return new Promise(async function (resolve, reject) {
       try {
-        const { id, name, description, dosage, unit } = supplementData;
+        const { id, name, description, dosage, unit, frequency } = supplementData;
         let supplementId;
 
         if (id) {
@@ -110,20 +111,21 @@ const supplementFunctions = {
             SET name = ?,
                 description = ?,
                 dosage = ?,
-                unit = ?
+                unit = ?,
+                frequency = ?
             WHERE id = ? AND (userId = ? OR userId IS NULL)
             `,
-            [name, description, dosage, unit, id, userId]
+            [name, description, dosage, unit, frequency, id, userId]
           );
           supplementId = id;
         } else {
           // Insert new supplement
           const [result] = await db.pool.query(
             `
-            INSERT INTO supplements (userId, name, description, dosage, unit)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO supplements (userId, name, description, dosage, unit, frequency)
+            VALUES (?, ?, ?, ?, ?, ?)
             `,
-            [userId, name, description, dosage, unit]
+            [userId, name, description, dosage, unit, frequency]
           );
           supplementId = result.insertId;
         }
@@ -137,7 +139,8 @@ const supplementFunctions = {
             name,
             description,
             dosage,
-            unit
+            unit,
+            frequency
           FROM supplements
           WHERE id = ?
           `,
