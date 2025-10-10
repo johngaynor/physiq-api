@@ -58,7 +58,10 @@ function sendEmail(
 
       const mailOptions = {
         from: process.env.GMAIL_USER,
-        to: to,
+        to:
+          process.env.NODE_ENV === "development"
+            ? "johngaynordev@gmail.com"
+            : to,
         cc: cc,
         bcc: bcc,
         subject:
@@ -83,7 +86,6 @@ ${body}`
             ]
           : [],
       };
-
       const info = await transporter.sendMail(mailOptions);
       console.log(`Email sent successfully: ${info.messageId}`);
       resolve("Success");
