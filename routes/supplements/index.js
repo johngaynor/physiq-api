@@ -5,8 +5,33 @@ const supplementFunctions = require("../../models/supplements");
 router.get("/", canAccess(29), async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const result = await supplementFunctions.getSupplements(userId);
-    res.status(200).json(result);
+    const supplements = await supplementFunctions.getSupplements(userId);
+    const tags = await supplementFunctions.getSupplementTags();
+    const supplementsTags = await supplementFunctions.getSupplementsTags();
+    const supplementsLinks = await supplementFunctions.getSupplementsLinks();
+    const supplementsIngredients =
+      await supplementFunctions.getSupplementsIngredients();
+
+    // Map supplements with their tags, links, and ingredients
+    const supplementsWithTagsAndLinks = supplements.map((supplement) => {
+      return {
+        ...supplement,
+        tags: supplementsTags
+          .filter((st) => st.supplementId === supplement.id)
+          .map((st) => {
+            const tag = tags.find((t) => t.id === st.tagId);
+            return { ...tag };
+          }),
+        links: supplementsLinks.filter(
+          (link) => link.supplementId === supplement.id
+        ),
+        children: supplementsIngredients.filter(
+          (ingredient) => ingredient.parentId === supplement.id
+        ),
+      };
+    });
+
+    res.status(200).json(supplementsWithTagsAndLinks);
   } catch (error) {
     res.routeError("/supplements", error);
   }
@@ -15,22 +40,33 @@ router.get("/", canAccess(29), async (req, res) => {
 router.post("/", canAccess(29), async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const supplementData = req.body;
-
-    if (!supplementData.name) {
-      return res.status(400).json({ error: "Supplement name is required" });
-    }
-
-    const result = await supplementFunctions.editSupplement(
+    const { id, supplement, tags, links, ingredients } = req.body;
+    const supplementId = await supplementFunctions.editSupplement({
       userId,
-      supplementData
+      id,
+      supplement,
+    });
+
+    // Handle other attributes
+    await supplementFunctions.editSupplementTags(supplementId, tags);
+    await supplementFunctions.editSupplementLinks(supplementId, links);
+    await supplementFunctions.editSupplementIngredients(
+      supplementId,
+      ingredients
     );
+
+    res.status(200).json(supplementId);
+  } catch (error) {
+    res.routeError("/supplements", error);
+  }
+});
+
+router.get("/tags", canAccess(29), async (req, res) => {
+  try {
+    const result = await supplementFunctions.getSupplementTags();
     res.status(200).json(result);
   } catch (error) {
-    res.routeError("/supplements", error, {
-      notFound: error.message === "Supplement not found",
-      unauthorized: error.message === "Unauthorized to edit this supplement",
-    });
+    res.routeError("/supplements/tags", error);
   }
 });
 
@@ -58,67 +94,6 @@ router.post("/logs", canAccess(29), async (req, res) => {
     res.status(200).json("Success");
   } catch (error) {
     res.routeError("/supplements/logs", error);
-  }
-});
-
-router.get("/links/:supplementId", canAccess(29), async (req, res) => {
-  try {
-    const { supplementId } = req.params;
-    const result = await supplementFunctions.getSupplementLinks(supplementId);
-    res.status(200).json(result);
-  } catch (error) {
-    res.routeError("/supplements/links/::supplementId", error);
-  }
-});
-
-router.post("/link", canAccess(29), async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const linkData = req.body;
-
-    if (!linkData.link) {
-      return res.status(400).json({ error: "Link is required" });
-    }
-
-    if (!linkData.id && !linkData.supplementId) {
-      return res
-        .status(400)
-        .json({ error: "Supplement ID is required for new links" });
-    }
-
-    const result = await supplementFunctions.editSupplementLink(
-      userId,
-      linkData
-    );
-    res.status(200).json(result);
-  } catch (error) {
-    res.routeError("/supplements/link", error, {
-      notFound:
-        error.message === "Link not found" ||
-        error.message === "Supplement not found",
-      unauthorized:
-        error.message === "Unauthorized to edit this link" ||
-        error.message === "Unauthorized to add link to this supplement",
-    });
-  }
-});
-
-router.delete("/link/:id", canAccess(29), async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { id } = req.params;
-
-    if (!id) {
-      return res.status(400).json({ error: "Link ID is required" });
-    }
-
-    const result = await supplementFunctions.deleteSupplementLink(userId, id);
-    res.status(200).json(result);
-  } catch (error) {
-    res.routeError("/supplements/link/::id", error, {
-      notFound: error.message === "Link not found",
-      unauthorized: error.message === "Unauthorized to delete this link",
-    });
   }
 });
 

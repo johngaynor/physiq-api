@@ -11,9 +11,8 @@ const supplementFunctions = {
             userId,
             name,
             description,
-            dosage, 
-            unit,
-            frequency
+            defaultDosage, 
+            unit
           FROM supplements
           WHERE userId is null or userId = ?
           ORDER BY id DESC
@@ -22,6 +21,165 @@ const supplementFunctions = {
         );
 
         resolve(supplements);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async getSupplementTags() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [tags] = await db.pool.query(
+          `
+          SELECT
+            id,
+            name
+          FROM supplementsTagsOptions
+          ORDER BY name ASC
+          `
+        );
+
+        resolve(tags);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async getSupplementsTags() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [supplementsTags] = await db.pool.query(
+          `
+          SELECT
+            id,
+            supplementId,
+            tagId
+          FROM supplementsTags
+          `
+        );
+
+        resolve(supplementsTags);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async getSupplementsIngredients() {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [supplementsIngredients] = await db.pool.query(
+          `
+          SELECT
+            si.id,
+            si.parentId,
+            si.childId,
+            si.dosage,
+            s.name,
+            s.unit
+          FROM supplementsIngredients si
+          JOIN supplements s ON si.childId = s.id
+          `
+        );
+
+        resolve(supplementsIngredients);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async editSupplementTags(supplementId, tags) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Delete existing tags for this supplement
+        await db.pool.query(
+          `
+          DELETE FROM supplementsTags
+          WHERE supplementId = ?
+          `,
+          [supplementId]
+        );
+
+        // Insert new tags if any exist
+        if (tags && tags.length > 0) {
+          const tagValues = tags.map((tag) => [supplementId, tag.id]);
+          await db.pool.query(
+            `
+            INSERT INTO supplementsTags (supplementId, tagId)
+            VALUES ?
+            `,
+            [tagValues]
+          );
+        }
+
+        resolve("Success");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async editSupplementLinks(supplementId, links) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Delete existing links for this supplement
+        await db.pool.query(
+          `
+          DELETE FROM supplementsLinks
+          WHERE supplementId = ?
+          `,
+          [supplementId]
+        );
+
+        // Insert new links if any exist
+        if (links && links.length > 0) {
+          const linkValues = links.map((link) => [
+            supplementId,
+            link.link,
+            link.title,
+          ]);
+          await db.pool.query(
+            `
+            INSERT INTO supplementsLinks (supplementId, link, title)
+            VALUES ?
+            `,
+            [linkValues]
+          );
+        }
+
+        resolve("Success");
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async editSupplementIngredients(supplementId, ingredients) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Delete existing ingredients for this supplement
+        await db.pool.query(
+          `
+          DELETE FROM supplementsIngredients
+          WHERE parentId = ?
+          `,
+          [supplementId]
+        );
+
+        // Insert new ingredients if any exist
+        if (ingredients && ingredients.length > 0) {
+          const ingredientValues = ingredients.map((ingredient) => [
+            supplementId,
+            ingredient.supplementId,
+            ingredient.dosage,
+          ]);
+          await db.pool.query(
+            `
+            INSERT INTO supplementsIngredients (parentId, childId, dosage)
+            VALUES ?
+            `,
+            [ingredientValues]
+          );
+        }
+
+        resolve("Success");
       } catch (error) {
         reject(error);
       }
@@ -79,12 +237,17 @@ const supplementFunctions = {
       }
     });
   },
-  async editSupplement(userId, supplementData) {
+  async editSupplement({ userId, id, supplement }) {
     return new Promise(async function (resolve, reject) {
       try {
-        const { id, name, description, dosage, unit, frequency } =
-          supplementData;
-        let supplementId;
+        const {
+          name,
+          description,
+          defaultDosage,
+          unit,
+          userId: supplementUserId,
+        } = supplement;
+        let resultId;
 
         if (id) {
           // Update existing supplement - verify ownership first
@@ -111,50 +274,41 @@ const supplementFunctions = {
             UPDATE supplements
             SET name = ?,
                 description = ?,
-                dosage = ?,
+                defaultDosage = ?,
                 unit = ?,
-                frequency = ?
+                userId = ?
             WHERE id = ? AND (userId = ? OR userId IS NULL)
             `,
-            [name, description, dosage, unit, frequency, id, userId]
+            [
+              name,
+              description,
+              defaultDosage,
+              unit,
+              supplementUserId,
+              id,
+              userId,
+            ]
           );
-          supplementId = id;
+          resultId = id;
         } else {
           // Insert new supplement
           const [result] = await db.pool.query(
             `
-            INSERT INTO supplements (userId, name, description, dosage, unit, frequency)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO supplements (userId, name, description, defaultDosage, unit)
+            VALUES (?, ?, ?, ?, ?)
             `,
-            [userId, name, description, dosage, unit, frequency]
+            [userId, name, description, defaultDosage, unit]
           );
-          supplementId = result.insertId;
+          resultId = result.insertId;
         }
 
-        // Select and return the complete supplement row
-        const [supplement] = await db.pool.query(
-          `
-          SELECT
-            id,
-            userId,
-            name,
-            description,
-            dosage,
-            unit,
-            frequency
-          FROM supplements
-          WHERE id = ?
-          `,
-          [supplementId]
-        );
-
-        resolve(supplement[0]);
+        resolve(resultId);
       } catch (error) {
         reject(error);
       }
     });
   },
-  async getSupplementLinks(supplementId) {
+  async getSupplementsLinks() {
     return new Promise(async function (resolve, reject) {
       try {
         const [result] = await db.pool.query(
@@ -165,138 +319,9 @@ const supplementFunctions = {
             link,
             title
           FROM supplementsLinks
-          WHERE supplementId = ?
-          `,
-          [supplementId]
+          `
         );
         resolve(result);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-  async editSupplementLink(userId, linkData) {
-    return new Promise(async function (resolve, reject) {
-      try {
-        const { id, supplementId, link, title } = linkData;
-        let linkId;
-
-        // If updating an existing link, verify ownership of the supplement
-        if (id) {
-          const [existing] = await db.pool.query(
-            `
-            SELECT sl.id, s.userId
-            FROM supplementsLinks sl
-            JOIN supplements s ON sl.supplementId = s.id
-            WHERE sl.id = ?
-            `,
-            [id]
-          );
-
-          if (existing.length === 0) {
-            reject(new Error("Link not found"));
-            return;
-          }
-
-          // Only allow edit if userId matches the supplement owner
-          if (existing[0].userId && existing[0].userId !== userId) {
-            reject(new Error("Unauthorized to edit this link"));
-            return;
-          }
-
-          await db.pool.query(
-            `
-            UPDATE supplementsLinks
-            SET link = ?,
-                title = ?
-            WHERE id = ?
-            `,
-            [link, title, id]
-          );
-          linkId = id;
-        } else {
-          // For new links, verify ownership of the supplement
-          const [supplement] = await db.pool.query(
-            `
-            SELECT userId FROM supplements WHERE id = ?
-            `,
-            [supplementId]
-          );
-
-          if (supplement.length === 0) {
-            reject(new Error("Supplement not found"));
-            return;
-          }
-
-          if (supplement[0].userId && supplement[0].userId !== userId) {
-            reject(new Error("Unauthorized to add link to this supplement"));
-            return;
-          }
-
-          // Insert new link
-          const [result] = await db.pool.query(
-            `
-            INSERT INTO supplementsLinks (supplementId, link, title)
-            VALUES (?, ?, ?)
-            `,
-            [supplementId, link, title]
-          );
-          linkId = result.insertId;
-        }
-
-        // Select and return the complete link row
-        const [linkRow] = await db.pool.query(
-          `
-          SELECT
-            id,
-            supplementId,
-            link,
-            title
-          FROM supplementsLinks
-          WHERE id = ?
-          `,
-          [linkId]
-        );
-
-        resolve(linkRow[0]);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-  async deleteSupplementLink(userId, linkId) {
-    return new Promise(async function (resolve, reject) {
-      try {
-        // Verify ownership before deleting
-        const [existing] = await db.pool.query(
-          `
-          SELECT sl.id, s.userId
-          FROM supplementsLinks sl
-          JOIN supplements s ON sl.supplementId = s.id
-          WHERE sl.id = ?
-          `,
-          [linkId]
-        );
-
-        if (existing.length === 0) {
-          reject(new Error("Link not found"));
-          return;
-        }
-
-        if (existing[0].userId && existing[0].userId !== userId) {
-          reject(new Error("Unauthorized to delete this link"));
-          return;
-        }
-
-        await db.pool.query(
-          `
-          DELETE FROM supplementsLinks
-          WHERE id = ?
-          `,
-          [linkId]
-        );
-
-        resolve({ message: "Link deleted successfully" });
       } catch (error) {
         reject(error);
       }
