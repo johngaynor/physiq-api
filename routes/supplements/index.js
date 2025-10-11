@@ -25,7 +25,7 @@ router.get("/", canAccess(29), async (req, res) => {
         links: supplementsLinks.filter(
           (link) => link.supplementId === supplement.id
         ),
-        children: supplementsIngredients.filter(
+        ingredients: supplementsIngredients.filter(
           (ingredient) => ingredient.parentId === supplement.id
         ),
       };
