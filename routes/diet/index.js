@@ -25,9 +25,18 @@ router.get("/logs", canAccess(21), async (req, res) => {
 router.post("/log", canAccess(21), async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const values = req.body;
-    const result = await dietFunctions.editDietLog(userId, values);
-    res.status(200).json(result);
+    const { id, dietLog, supplements } = req.body;
+
+    const logId = await dietFunctions.editDietLog({
+      userId,
+      id,
+      dietLog,
+    });
+
+    // Handle supplements
+    await dietFunctions.editDietLogSupplements(logId, supplements);
+
+    res.status(200).json(logId);
   } catch (error) {
     res.routeError("/diet/log", error);
   }

@@ -53,31 +53,26 @@ const dietFunctions = {
       }
     });
   },
-  async editDietLog(
-    userId,
-    {
-      id,
-      protein,
-      carbs,
-      fat,
-      calories,
-      effectiveDate,
-      cardio,
-      cardioMinutes,
-      notes,
-      water,
-      steps,
-      supplements,
-    }
-  ) {
+  async editDietLog({ userId, id, dietLog }) {
     return new Promise(async function (resolve, reject) {
       try {
-        let returnId = id;
+        const {
+          protein,
+          carbs,
+          fat,
+          calories,
+          effectiveDate,
+          cardio,
+          cardioMinutes,
+          notes,
+          water,
+          steps,
+        } = dietLog;
+        let resultId;
         const currentTime = new Date();
 
-        // update existing
         if (id) {
-          // update main table
+          // Update existing log
           await db.pool.query(
             `
               UPDATE dietLogs
@@ -112,33 +107,9 @@ const dietFunctions = {
               userId,
             ]
           );
-          // delete existing supplements
-          await db.pool.query(
-            `
-              DELETE FROM dietLogsSupplements
-              WHERE logId = ?
-            `,
-            [id]
-          );
-          // insert new supplements
-          if (supplements && supplements.length > 0) {
-            const supplementValues = supplements.map((supp) => [
-              id,
-              supp.supplementId,
-              supp.dosage,
-              supp.unit,
-              supp.frequency,
-            ]);
-            await db.pool.query(
-              `
-                INSERT INTO dietLogsSupplements (logId, supplementId, dosage, unit, frequency)
-                VALUES ?
-              `,
-              [supplementValues]
-            );
-          }
+          resultId = id;
         } else {
-          // insert
+          // Insert new log
           const [result] = await db.pool.query(
             `
               INSERT INTO dietLogs (
@@ -185,72 +156,45 @@ const dietFunctions = {
               currentTime,
             ]
           );
-
-          const newId = result.insertId;
-
-          // insert supplements
-          if (supplements && supplements.length > 0) {
-            const supplementValues = supplements.map((supp) => [
-              newId,
-              supp.supplementId,
-              supp.dosage,
-              supp.unit,
-              supp.frequency,
-            ]);
-            await db.pool.query(
-              `
-                INSERT INTO dietLogsSupplements (logId, supplementId, dosage, unit, frequency)
-                VALUES ?
-              `,
-              [supplementValues]
-            );
-          }
-
-          returnId = newId;
+          resultId = result.insertId;
         }
 
-        // get created/updated log and corresponding supplements
-        const [log] = await db.pool.query(
+        resolve(resultId);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async editDietLogSupplements(logId, supplements) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Delete existing supplements for this log
+        await db.pool.query(
           `
-            SELECT
-                id,
-                cast(protein as double) as protein,
-                cast(carbs as double) as carbs,
-                cast(fat as double) as fat,
-                cast(calories as double) as calories,
-                effectiveDate,
-                cardio,
-                cardioMinutes, 
-                notes,
-                water, 
-                steps
-            FROM dietLogs
-            WHERE id = ?
-              AND userId = ?
+          DELETE FROM dietLogsSupplements
+          WHERE logId = ?
           `,
-          [returnId, userId]
-        );
-        const [newSupplements] = await db.pool.query(
-          `
-            SELECT
-                supp.id,
-                supp.supplementId,
-                supp.dosage,
-                supp.unit,
-                supp.frequency,
-                s.name as name,
-                s.description as description
-            FROM dietLogsSupplements supp
-            LEFT JOIN supplements s ON s.id = supp.supplementId
-            WHERE supp.logId = ?
-          `,
-          [returnId]
+          [logId]
         );
 
-        resolve({
-          existing: !!id,
-          log: { ...log[0], supplements: newSupplements },
-        });
+        // Insert new supplements if any exist
+        if (supplements && supplements.length > 0) {
+          const supplementValues = supplements.map((supp) => [
+            logId,
+            supp.supplementId,
+            supp.dosage,
+            supp.frequency,
+          ]);
+          await db.pool.query(
+            `
+            INSERT INTO dietLogsSupplements (logId, supplementId, dosage, frequency)
+            VALUES ?
+            `,
+            [supplementValues]
+          );
+        }
+
+        resolve("Success");
       } catch (error) {
         reject(error);
       }
@@ -312,7 +256,6 @@ const dietFunctions = {
               id,
               supplementId,
               dosage,
-              unit,
               frequency
           from dietLogsSupplements
           where logId = ?
