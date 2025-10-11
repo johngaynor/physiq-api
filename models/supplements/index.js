@@ -308,6 +308,42 @@ const supplementFunctions = {
       }
     });
   },
+  async deleteSupplement(userId, supplementId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        // Verify ownership before deleting
+        const [existing] = await db.pool.query(
+          `
+          SELECT userId FROM supplements WHERE id = ?
+          `,
+          [supplementId]
+        );
+
+        if (existing.length === 0) {
+          reject(new Error("Supplement not found"));
+          return;
+        }
+
+        // Only allow delete if userId matches (don't allow deleting global supplements)
+        if (!existing[0].userId || existing[0].userId !== userId) {
+          reject(new Error("Unauthorized to delete this supplement"));
+          return;
+        }
+
+        await db.pool.query(
+          `
+          DELETE FROM supplements
+          WHERE id = ? AND userId = ?
+          `,
+          [supplementId, userId]
+        );
+
+        resolve({ message: "Supplement deleted successfully" });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
   async getSupplementsLinks() {
     return new Promise(async function (resolve, reject) {
       try {

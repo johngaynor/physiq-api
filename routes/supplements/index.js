@@ -61,6 +61,22 @@ router.post("/", canAccess(29), async (req, res) => {
   }
 });
 
+router.delete("/", canAccess(29), async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "Supplement ID is required" });
+    }
+
+    const result = await supplementFunctions.deleteSupplement(userId, id);
+    res.status(200).json(result);
+  } catch (error) {
+    res.routeError("/supplements", error);
+  }
+});
+
 router.get("/tags", canAccess(29), async (req, res) => {
   try {
     const result = await supplementFunctions.getSupplementTags();
