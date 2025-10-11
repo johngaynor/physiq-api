@@ -5,8 +5,18 @@ const dietFunctions = require("../../models/diet");
 router.get("/logs", canAccess(21), async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const result = await dietFunctions.getDietLogs(userId);
-    res.status(200).json(result);
+    const logs = await dietFunctions.getDietLogs(userId);
+    const supplements = await dietFunctions.getDietLogsSupplements(userId);
+
+    // Map logs with their supplements
+    const logsWithSupplements = logs.map((log) => {
+      return {
+        ...log,
+        supplements: supplements.filter((supp) => supp.logId === log.id),
+      };
+    });
+
+    res.status(200).json(logsWithSupplements);
   } catch (error) {
     res.routeError("/diet/logs", error);
   }

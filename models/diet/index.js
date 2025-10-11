@@ -4,7 +4,7 @@ const dietFunctions = {
   async getDietLogs(userId) {
     return new Promise(async function (resolve, reject) {
       try {
-        const [dietLogs] = await db.pool.query(
+        const [result] = await db.pool.query(
           `
             SELECT
                 id,
@@ -23,46 +23,31 @@ const dietFunctions = {
         `,
           [userId]
         );
-
-        const [supplements] = await db.pool.query(
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async getDietLogsSupplements(userId) {
+    return new Promise(async function (resolve, reject) {
+      try {
+        const [result] = await db.pool.query(
           `
             SELECT
-                supp.id,
-                supp.logId,
-                supp.supplementId,
-                supp.dosage,
-                supp.unit,
-                supp.frequency,
-                s.name as name,
-                s.description as description
-            from dietLogsSupplements supp
-            left join dietLogs log
-                on log.id = supp.logId
-            left join supplements s
-                on s.id = supp.supplementId
-            WHERE log.userId = ?
-          `,
+              id,
+              logId,
+              supplementId,
+              dosage,
+              frequency
+            FROM dietLogsSupplements
+            WHERE logId IN (
+              SELECT id FROM dietLogs WHERE userId = ?
+            )
+        `,
           [userId]
         );
-
-        const logsWithSupplements = dietLogs.map((log) => {
-          return {
-            ...log,
-            supplements: supplements
-              .filter((supp) => supp.logId === log.id)
-              .map((supp) => ({
-                id: supp.id,
-                supplementId: supp.supplementId,
-                name: supp.name,
-                description: supp.description,
-                dosage: supp.dosage,
-                unit: supp.unit,
-                frequency: supp.frequency,
-              })),
-          };
-        });
-
-        resolve(logsWithSupplements);
+        resolve(result);
       } catch (error) {
         reject(error);
       }
