@@ -1,0 +1,31 @@
+[project]
+name = "physiq-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "litestar[sqlalchemy,standard]>=2.24.0",
+]
+
+[dependency-groups]
+dev = [
+    "poethepoet>=0.48.0",
+    "pre-commit>=4.6.2",
+    "pyright>=1.1.414",
+    "ruff>=0.16.7",
+]
+test = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "pytest-timeout>=2.4.0",
+    "testcontainers>=4.15.0",
+]
+
+[tool.poe.tasks]
+dev = "litestar --app app.main:app run --reload"
+start = "litestar --app app.main:app run"
+lint = "ruff check ."
+format = "ruff format ."
+check = ["lint", "format"]
