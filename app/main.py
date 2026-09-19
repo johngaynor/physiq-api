@@ -1,10 +1,11 @@
+from app.routers.check_in import CheckInRouter
 from app.shared.open_api import open_api_config
 from litestar import Litestar, get
 
 
-@get("/health", tags=["meta"])
+@get("/health", tags=["Meta"])
 async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-app = Litestar(route_handlers=[], openapi_config=open_api_config)
+app = Litestar(route_handlers=[health, CheckInRouter], openapi_config=open_api_config)
