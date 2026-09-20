@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "advanced-alchemy>=1.11.0",
+    "asyncpg>=0.31.0",
     "litestar[sqlalchemy,standard]>=2.24.0",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
@@ -33,7 +34,9 @@ start = "litestar --app app.main:app run"
 lint = "ruff check ."
 format = "ruff format ."
 check = ["lint", "format"]
+test = "pytest"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+pythonpath = ["."]
