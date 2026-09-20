@@ -1,11 +1,10 @@
-import app.models
 from advanced_alchemy.config import EngineConfig
 from advanced_alchemy.extensions.litestar import (
     AsyncSessionConfig,
     SQLAlchemyAsyncConfig,
     SQLAlchemyPlugin,
 )
-from app.middleware.authentication import AuthenticationMiddleware
+from app.auth.authentication import AuthenticationMiddleware
 from app.routers.athlete import AthleteRouter
 from app.routers.coach import CoachRouter
 from app.settings import SETTINGS
