@@ -1,5 +1,6 @@
 from app.middleware.authentication import AuthenticationMiddleware
 from app.routers.athlete import AthleteRouter
+from app.routers.coach import CoachRouter
 from app.shared.open_api import open_api_config
 from litestar import Litestar, get
 from litestar.middleware.base import DefineMiddleware
@@ -11,7 +12,7 @@ async def health() -> dict[str, str]:
 
 
 app = Litestar(
-    route_handlers=[health, AthleteRouter],
+    route_handlers=[health, AthleteRouter, CoachRouter],
     openapi_config=open_api_config,
     middleware=[
         DefineMiddleware(AuthenticationMiddleware, exclude=["^/health$", "^/schema"])
