@@ -1,0 +1,5 @@
+[
+  {"id": "00000000-0000-4000-8000-000000000001", "name": "athlete", "description": "Owns and manages their own data", "version": 1},
+  {"id": "00000000-0000-4000-8000-000000000002", "name": "coach", "description": "Reads and writes data for coached athletes", "version": 1},
+  {"id": "00000000-0000-4000-8000-000000000003", "name": "admin", "description": "Unrestricted access", "version": 1}
+]

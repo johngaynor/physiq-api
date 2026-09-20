@@ -7,6 +7,9 @@ class Settings(BaseSettings):
         extra="ignore", env_file=".env", env_file_encoding="utf-8"
     )
 
+    environment: str = Field(default="development", alias="ENVIRONMENT")
+    """Seed fixtures run on startup only when this is ``development``."""
+
     database_uri: str = Field(default="", alias="DATABASE_URI")
     """Full SQLAlchemy URL. When empty it is assembled from the DB_* fields."""
 
