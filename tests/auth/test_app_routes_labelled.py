@@ -1,6 +1,7 @@
 from typing import cast
 
 from app.auth.scope import RouteScope, resolve_scope
+from app.auth.scope_guard import scope_guard
 from app.main import app
 from litestar.handlers import HTTPRouteHandler
 
@@ -29,3 +30,12 @@ def test_every_route_resolves_to_its_expected_scope() -> None:
         ("/coach/check-ins", "GET"): RouteScope("coach", "check-ins", "read"),
         ("/coach/metrics", "GET"): RouteScope("coach", "metrics", "read"),
     }
+
+
+def test_every_scoped_route_is_protected_by_the_scope_guard() -> None:
+    unguarded = [
+        key
+        for key, handler in _scoped_handlers().items()
+        if scope_guard not in [getattr(g, "func", g) for g in handler.resolve_guards()]
+    ]
+    assert unguarded == []

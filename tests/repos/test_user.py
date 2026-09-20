@@ -1,0 +1,69 @@
+import uuid
+
+from app.models.role import RoleModel
+from app.models.role_scope import RoleScopeModel
+from app.models.user import UserModel
+from app.models.user_role import UserRoleModel
+from app.repos.user import UserRepository
+from sqlalchemy.ext.asyncio import AsyncSession
+
+
+async def _seed_user_with_scopes(
+    session: AsyncSession, *, api_key_hash: str, scopes: list[str]
+) -> UserModel:
+    user = UserModel(email="a@b.c", api_key_hash=api_key_hash)
+    role = RoleModel(name=f"role-{uuid.uuid4()}")
+    role.scopes = [RoleScopeModel(scope_str=s) for s in scopes]
+    session.add_all([user, role])
+    await session.flush()
+    session.add(UserRoleModel(user_id=user.id, role_id=role.id))
+    await session.commit()
+    return user
+
+
+async def test_get_by_api_key_hash_returns_matching_user(
+    db_session: AsyncSession,
+) -> None:
+    seeded = await _seed_user_with_scopes(db_session, api_key_hash="h1", scopes=[])
+
+    found = await UserRepository(db_session).get_by_api_key_hash("h1")
+
+    assert found is not None
+    assert found.id == seeded.id
+
+
+async def test_get_by_api_key_hash_returns_none_when_unknown(
+    db_session: AsyncSession,
+) -> None:
+    assert await UserRepository(db_session).get_by_api_key_hash("nope") is None
+
+
+async def test_list_scope_strings_unions_scopes_across_roles(
+    db_session: AsyncSession,
+) -> None:
+    user = await _seed_user_with_scopes(
+        db_session, api_key_hash="h2", scopes=["athlete:check-ins:self:read"]
+    )
+    second_role = RoleModel(name=f"role-{uuid.uuid4()}")
+    second_role.scopes = [
+        RoleScopeModel(scope_str="coach:check-ins:*:read"),
+        RoleScopeModel(scope_str="athlete:check-ins:self:read"),  # duplicate
+    ]
+    db_session.add(second_role)
+    await db_session.flush()
+    db_session.add(UserRoleModel(user_id=user.id, role_id=second_role.id))
+    await db_session.commit()
+
+    scopes = await UserRepository(db_session).list_scope_strings(user.id)
+
+    assert sorted(scopes) == ["athlete:check-ins:self:read", "coach:check-ins:*:read"]
+
+
+async def test_list_scope_strings_empty_for_user_without_roles(
+    db_session: AsyncSession,
+) -> None:
+    user = UserModel(email="x@y.z")
+    db_session.add(user)
+    await db_session.commit()
+
+    assert await UserRepository(db_session).list_scope_strings(user.id) == []

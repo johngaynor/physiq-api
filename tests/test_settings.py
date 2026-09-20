@@ -4,7 +4,7 @@ from app.settings import Settings
 
 def _settings(**env: str) -> Settings:
     # _env_file=None keeps the real .env out of these tests.
-    return Settings(_env_file=None, API_KEY="k", **env)
+    return Settings(_env_file=None, **env)
 
 
 def test_database_uri_used_verbatim_when_set() -> None:

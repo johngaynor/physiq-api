@@ -14,13 +14,9 @@ from litestar.middleware.base import DefineMiddleware
 
 alchemy_config = SQLAlchemyAsyncConfig(
     connection_string=SETTINGS.database_uri,
-    # Commit the request's session on a 2xx/3xx response, roll back otherwise.
     before_send_handler="autocommit",
-    # Keep ORM objects readable after the request commits.
     session_config=AsyncSessionConfig(expire_on_commit=False),
-    # Replace dead connections on checkout and cap connection age.
     engine_config=EngineConfig(pool_pre_ping=True, pool_recycle=300),
-    # Migrations own the schema; never let the app create tables itself.
     create_all=False,
 )
 
@@ -35,6 +31,10 @@ app = Litestar(
     openapi_config=open_api_config,
     plugins=[SQLAlchemyPlugin(config=alchemy_config)],
     middleware=[
-        DefineMiddleware(AuthenticationMiddleware, exclude=["^/health$", "^/schema"])
+        DefineMiddleware(
+            AuthenticationMiddleware,
+            alchemy_config=alchemy_config,
+            exclude=["^/health$", "^/schema"],
+        )
     ],
 )
