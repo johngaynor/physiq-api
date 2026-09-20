@@ -1,0 +1,7 @@
+.venv
+.git
+postgres_data
+.pytest_cache
+.ruff_cache
+__pycache__
+.env

@@ -10,3 +10,5 @@ wheels/
 .venv
 
 .env
+# Local Postgres data from docker compose
+postgres_data/
