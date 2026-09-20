@@ -18,7 +18,9 @@ def test_database_uri_built_from_parts() -> None:
 
 
 def test_database_uri_parts_respect_port() -> None:
-    s = _settings(DB_HOST="h", DB_PORT="6543", DB_NAME="d", DB_USER="u", DB_PASSWORD="p")
+    s = _settings(
+        DB_HOST="h", DB_PORT="6543", DB_NAME="d", DB_USER="u", DB_PASSWORD="p"
+    )
     assert s.database_uri == "postgresql+asyncpg://u:p@h:6543/d"
 
 
