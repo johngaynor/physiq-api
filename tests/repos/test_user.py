@@ -67,3 +67,57 @@ async def test_list_scope_strings_empty_for_user_without_roles(
     await db_session.commit()
 
     assert await UserRepository(db_session).list_scope_strings(user.id) == []
+
+
+async def test_list_all_returns_every_user(db_session: AsyncSession) -> None:
+    seeded = await _seed_user_with_scopes(db_session, api_key_hash="h3", scopes=[])
+
+    users = await UserRepository(db_session).list_all()
+
+    assert seeded.id in {u.id for u in users}
+    assert "athlete@physiq.dev" in {u.email for u in users}
+
+
+async def test_get_by_id_returns_matching_user(db_session: AsyncSession) -> None:
+    seeded = await _seed_user_with_scopes(db_session, api_key_hash="h4", scopes=[])
+
+    found = await UserRepository(db_session).get_by_id(seeded.id)
+
+    assert found is not None
+    assert found.email == seeded.email
+
+
+async def test_get_by_id_returns_none_when_unknown(db_session: AsyncSession) -> None:
+    assert await UserRepository(db_session).get_by_id(uuid.uuid4()) is None
+
+
+async def test_list_roles_returns_assigned_roles_with_scopes(
+    db_session: AsyncSession,
+) -> None:
+    user = await _seed_user_with_scopes(
+        db_session, api_key_hash="h5", scopes=["athlete:check-ins:self:read"]
+    )
+    second_role = RoleModel(name=f"role-{uuid.uuid4()}")
+    second_role.scopes = [RoleScopeModel(scope_str="coach:check-ins:*:read")]
+    db_session.add(second_role)
+    await db_session.flush()
+    db_session.add(UserRoleModel(user_id=user.id, role_id=second_role.id))
+    await db_session.commit()
+
+    roles = await UserRepository(db_session).list_roles(user.id)
+
+    assert len(roles) == 2
+    assert {s.scope_str for r in roles for s in r.scopes} == {
+        "athlete:check-ins:self:read",
+        "coach:check-ins:*:read",
+    }
+
+
+async def test_list_roles_empty_for_user_without_roles(
+    db_session: AsyncSession,
+) -> None:
+    user = UserModel(email="no@roles.io")
+    db_session.add(user)
+    await db_session.commit()
+
+    assert await UserRepository(db_session).list_roles(user.id) == []

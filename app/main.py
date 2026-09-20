@@ -6,6 +6,7 @@ from advanced_alchemy.extensions.litestar import (
 )
 from app.auth.authentication import AuthenticationMiddleware
 from app.fixtures.seed import seed_db
+from app.routers.admin import AdminRouter
 from app.routers.athlete import AthleteRouter
 from app.routers.coach import CoachRouter
 from app.settings import SETTINGS
@@ -36,7 +37,7 @@ async def health() -> dict[str, str]:
 
 
 app = Litestar(
-    route_handlers=[health, AthleteRouter, CoachRouter],
+    route_handlers=[health, AdminRouter, AthleteRouter, CoachRouter],
     openapi_config=open_api_config,
     plugins=[SQLAlchemyPlugin(config=alchemy_config)],
     on_startup=[seed_on_startup],

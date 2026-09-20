@@ -19,6 +19,25 @@ class UserRepository:
         result = await self._session.execute(stmt)
         return result.scalars().one_or_none()
 
+    async def list_all(self) -> list[UserModel]:
+        stmt = select(UserModel).order_by(UserModel.email)
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_by_id(self, user_id: uuid.UUID) -> UserModel | None:
+        return await self._session.get(UserModel, user_id)
+
+    async def list_roles(self, user_id: uuid.UUID) -> list[RoleModel]:
+        """Roles assigned to ``user_id``, each with its scopes loaded."""
+        stmt = (
+            select(RoleModel)
+            .join(UserRoleModel, UserRoleModel.role_id == RoleModel.id)
+            .where(UserRoleModel.user_id == user_id)
+            .order_by(RoleModel.name)
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
     async def list_scope_strings(self, user_id: uuid.UUID) -> list[str]:
         """Distinct scope strings granted to ``user_id`` through any of their roles."""
         stmt = (

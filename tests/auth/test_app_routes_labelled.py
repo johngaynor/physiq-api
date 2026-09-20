@@ -25,6 +25,10 @@ def test_every_route_resolves_to_its_expected_scope() -> None:
     resolved = {key: resolve_scope(h) for key, h in _scoped_handlers().items()}
 
     assert resolved == {
+        ("/admin/roles", "GET"): RouteScope("admin", "roles", "read"),
+        ("/admin/roles/{role_id:uuid}", "GET"): RouteScope("admin", "roles", "read"),
+        ("/admin/users", "GET"): RouteScope("admin", "users", "read"),
+        ("/admin/users/{user_id:uuid}", "GET"): RouteScope("admin", "users", "read"),
         ("/athlete/check-ins", "GET"): RouteScope("athlete", "check-ins", "read"),
         ("/athlete/metrics", "GET"): RouteScope("athlete", "metrics", "read"),
         ("/coach/check-ins", "GET"): RouteScope("coach", "check-ins", "read"),

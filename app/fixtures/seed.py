@@ -21,6 +21,7 @@ _DATA = Path(__file__).parent / "data"
 # Plaintext keys for the seeded dev users. Only their hashes live in users.json.
 DEV_ATHLETE_API_KEY = "123"
 DEV_COACH_API_KEY = "456"
+DEV_ADMIN_API_KEY = "789"
 
 _UUID_FIELDS = {"id", "user_id", "role_id", "granted_by"}
 
