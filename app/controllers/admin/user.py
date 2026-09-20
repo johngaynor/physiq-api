@@ -12,13 +12,13 @@ class AdminUserController(Controller):
         "user_service": Provide(provide_user_service)
     }
 
-    @get(path="/", summary="List every user with their role names.")
+    @get(path="/", summary="Get Users")
     async def get_all(
         self, user_service: NamedDependency[UserService]
     ) -> list[UserSummary]:
         return await user_service.get_all()
 
-    @get(path="/{user_id:uuid}", summary="Get one user with roles and scopes.")
+    @get(path="/{user_id:uuid}", summary="Get User by ID")
     async def get_one(
         self, user_service: NamedDependency[UserService], user_id: uuid.UUID
     ) -> UserDetail:
