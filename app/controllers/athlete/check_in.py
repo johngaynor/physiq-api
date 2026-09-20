@@ -6,7 +6,7 @@ from litestar import Controller, get
 from litestar.di import Provide
 
 
-class CheckInController(Controller):
+class AthleteCheckInController(Controller):
     dependencies: ClassVar[dict[str, Provide]] = {
         "check_in_service": Provide(CheckInService, sync_to_thread=False)
     }

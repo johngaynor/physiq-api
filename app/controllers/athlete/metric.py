@@ -6,7 +6,7 @@ from litestar import Controller, get
 from litestar.di import Provide
 
 
-class MetricController(Controller):
+class AthleteMetricController(Controller):
     dependencies: ClassVar[dict[str, Provide]] = {
         "metric_service": Provide(MetricService, sync_to_thread=False)
     }
