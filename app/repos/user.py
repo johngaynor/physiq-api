@@ -19,7 +19,7 @@ class UserRepository:
         result = await self._session.execute(stmt)
         return result.scalars().one_or_none()
 
-    async def list_all(self) -> list[UserModel]:
+    async def get_all(self) -> list[UserModel]:
         stmt = select(UserModel).order_by(UserModel.email)
         result = await self._session.execute(stmt)
         return list(result.scalars().all())

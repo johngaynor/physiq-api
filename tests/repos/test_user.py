@@ -69,10 +69,10 @@ async def test_list_scope_strings_empty_for_user_without_roles(
     assert await UserRepository(db_session).list_scope_strings(user.id) == []
 
 
-async def test_list_all_returns_every_user(db_session: AsyncSession) -> None:
+async def test_get_all_returns_every_user(db_session: AsyncSession) -> None:
     seeded = await _seed_user_with_scopes(db_session, api_key_hash="h3", scopes=[])
 
-    users = await UserRepository(db_session).list_all()
+    users = await UserRepository(db_session).get_all()
 
     assert seeded.id in {u.id for u in users}
     assert "athlete@physiq.dev" in {u.email for u in users}

@@ -19,7 +19,7 @@ class RoleService:
         self._repo = RoleRepository(db_session)
 
     async def get_all(self) -> list[RoleRead]:
-        roles = await self._repo.list_all()
+        roles = await self._repo.get_all()
         return [RoleRead.from_model(r) for r in roles]
 
     async def get(self, role_id: uuid.UUID) -> RoleRead:

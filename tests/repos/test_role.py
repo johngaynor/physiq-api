@@ -15,12 +15,12 @@ async def _seed_role(session: AsyncSession, *, scopes: list[str]) -> RoleModel:
     return role
 
 
-async def test_list_all_returns_every_role_with_scopes(
+async def test_get_all_returns_every_role_with_scopes(
     db_session: AsyncSession,
 ) -> None:
     seeded = await _seed_role(db_session, scopes=["coach:metrics:*:read"])
 
-    roles = await RoleRepository(db_session).list_all()
+    roles = await RoleRepository(db_session).get_all()
 
     by_id = {r.id: r for r in roles}
     assert seeded.id in by_id
@@ -28,8 +28,8 @@ async def test_list_all_returns_every_role_with_scopes(
     assert {"athlete", "coach", "admin"} <= {r.name for r in roles}
 
 
-async def test_list_all_is_ordered_by_name(db_session: AsyncSession) -> None:
-    roles = await RoleRepository(db_session).list_all()
+async def test_get_all_is_ordered_by_name(db_session: AsyncSession) -> None:
+    roles = await RoleRepository(db_session).get_all()
 
     assert [r.name for r in roles] == sorted(r.name for r in roles)
 

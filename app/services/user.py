@@ -14,7 +14,7 @@ class UserService:
         self._roles = RoleRepository(db_session)
 
     async def get_all(self) -> list[UserSummary]:
-        users = await self._repo.list_all()
+        users = await self._repo.get_all()
         return [
             UserSummary.from_model(u, await self._repo.list_roles(u.id)) for u in users
         ]
