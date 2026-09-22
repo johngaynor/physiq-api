@@ -8,13 +8,20 @@ from app.fixtures.seed import seed_db
 from app.models.role import RoleModel
 from app.models.role_scope import RoleScopeModel
 from app.models.user import UserModel
+from app.models.user_athlete import UserAthleteModel
 from app.models.user_role import UserRoleModel
 from sqlalchemy import NullPool, delete
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
 # Child tables first so foreign keys never block a delete.
-_TABLES_IN_DELETE_ORDER = (UserRoleModel, RoleScopeModel, UserModel, RoleModel)
+_TABLES_IN_DELETE_ORDER = (
+    UserAthleteModel,
+    UserRoleModel,
+    RoleScopeModel,
+    UserModel,
+    RoleModel,
+)
 
 
 async def _create_tables(db_url: str) -> None:

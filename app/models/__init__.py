@@ -8,6 +8,13 @@ dataclass stubs (check-ins, metrics) are intentionally left out.
 from app.models.role import RoleModel
 from app.models.role_scope import RoleScopeModel
 from app.models.user import UserModel
+from app.models.user_athlete import UserAthleteModel
 from app.models.user_role import UserRoleModel
 
-__all__ = ("RoleModel", "RoleScopeModel", "UserModel", "UserRoleModel")
+__all__ = (
+    "RoleModel",
+    "RoleScopeModel",
+    "UserAthleteModel",
+    "UserModel",
+    "UserRoleModel",
+)

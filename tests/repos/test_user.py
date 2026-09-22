@@ -1,10 +1,13 @@
 import uuid
 
+import pytest
 from app.models.role import RoleModel
 from app.models.role_scope import RoleScopeModel
 from app.models.user import UserModel
+from app.models.user_athlete import UserAthleteModel
 from app.models.user_role import UserRoleModel
 from app.repos.user import UserRepository
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -172,3 +175,113 @@ async def test_revoke_role_returns_false_when_not_assigned(
     user = await _seed_user_with_scopes(db_session, api_key_hash="h10", scopes=[])
 
     assert await UserRepository(db_session).revoke_role(user.id, uuid.uuid4()) is False
+
+
+# --- athletes --------------------------------------------------------------
+
+
+async def _seed_user(session: AsyncSession, email: str) -> UserModel:
+    user = UserModel(email=email)
+    session.add(user)
+    await session.commit()
+    return user
+
+
+async def test_assign_athlete_records_creating_admin(
+    db_session: AsyncSession,
+) -> None:
+    coach = await _seed_user(db_session, "coach1@x.io")
+    athlete = await _seed_user(db_session, "athlete1@x.io")
+    admin = await _seed_user(db_session, "admin1@x.io")
+    repo = UserRepository(db_session)
+
+    await repo.assign_athlete(coach.id, athlete.id, created_by=admin.id)
+    await db_session.commit()
+
+    link = await db_session.get(UserAthleteModel, (coach.id, athlete.id))
+    assert link is not None
+    assert link.created_by == admin.id
+    assert [a.id for a in await repo.list_athletes(coach.id)] == [athlete.id]
+
+
+async def test_assign_athlete_is_idempotent(db_session: AsyncSession) -> None:
+    coach = await _seed_user(db_session, "coach2@x.io")
+    athlete = await _seed_user(db_session, "athlete2@x.io")
+    repo = UserRepository(db_session)
+
+    await repo.assign_athlete(coach.id, athlete.id, created_by=None)
+    await repo.assign_athlete(coach.id, athlete.id, created_by=None)
+    await db_session.commit()
+
+    assert len(await repo.list_athletes(coach.id)) == 1
+
+
+async def test_assign_athlete_to_self_is_rejected(db_session: AsyncSession) -> None:
+    coach = await _seed_user(db_session, "coach3@x.io")
+    repo = UserRepository(db_session)
+
+    with pytest.raises(IntegrityError):
+        await repo.assign_athlete(coach.id, coach.id, created_by=None)
+
+
+async def test_list_athletes_orders_by_email_and_is_one_directional(
+    db_session: AsyncSession,
+) -> None:
+    coach = await _seed_user(db_session, "coach4@x.io")
+    zed = await _seed_user(db_session, "zed@x.io")
+    amy = await _seed_user(db_session, "amy@x.io")
+    repo = UserRepository(db_session)
+    await repo.assign_athlete(coach.id, zed.id, created_by=None)
+    await repo.assign_athlete(coach.id, amy.id, created_by=None)
+    await db_session.commit()
+
+    assert [a.email for a in await repo.list_athletes(coach.id)] == [
+        "amy@x.io",
+        "zed@x.io",
+    ]
+    assert await repo.list_athletes(amy.id) == []
+
+
+async def test_list_athletes_empty_for_user_without_athletes(
+    db_session: AsyncSession,
+) -> None:
+    coach = await _seed_user(db_session, "coach5@x.io")
+
+    assert await UserRepository(db_session).list_athletes(coach.id) == []
+
+
+async def test_revoke_athlete_removes_link(db_session: AsyncSession) -> None:
+    coach = await _seed_user(db_session, "coach6@x.io")
+    athlete = await _seed_user(db_session, "athlete6@x.io")
+    repo = UserRepository(db_session)
+    await repo.assign_athlete(coach.id, athlete.id, created_by=None)
+    await db_session.commit()
+
+    revoked = await repo.revoke_athlete(coach.id, athlete.id)
+    await db_session.commit()
+
+    assert revoked is True
+    assert await repo.list_athletes(coach.id) == []
+
+
+async def test_revoke_athlete_returns_false_when_not_linked(
+    db_session: AsyncSession,
+) -> None:
+    coach = await _seed_user(db_session, "coach7@x.io")
+
+    assert (
+        await UserRepository(db_session).revoke_athlete(coach.id, uuid.uuid4()) is False
+    )
+
+
+async def test_deleting_user_cascades_athlete_links(db_session: AsyncSession) -> None:
+    coach = await _seed_user(db_session, "coach8@x.io")
+    athlete = await _seed_user(db_session, "athlete8@x.io")
+    repo = UserRepository(db_session)
+    await repo.assign_athlete(coach.id, athlete.id, created_by=None)
+    await db_session.commit()
+
+    await db_session.delete(athlete)
+    await db_session.commit()
+
+    assert await db_session.get(UserAthleteModel, (coach.id, athlete.id)) is None

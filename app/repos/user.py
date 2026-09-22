@@ -3,13 +3,15 @@ import uuid
 from app.models.role import RoleModel
 from app.models.role_scope import RoleScopeModel
 from app.models.user import UserModel
+from app.models.user_athlete import UserAthleteModel
 from app.models.user_role import UserRoleModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class UserRepository:
-    """Reads users and the scopes granted to them through their roles."""
+    """Reads users, the scopes granted to them through their roles, and the
+    athletes they coach."""
 
     def __init__(self, db_session: AsyncSession) -> None:
         self._session = db_session
@@ -69,3 +71,40 @@ class UserRepository:
         )
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
+
+    async def list_athletes(self, user_id: uuid.UUID) -> list[UserModel]:
+        """Users coached by ``user_id``, ordered by email."""
+        stmt = (
+            select(UserModel)
+            .join(UserAthleteModel, UserAthleteModel.athlete_id == UserModel.id)
+            .where(UserAthleteModel.user_id == user_id)
+            .order_by(UserModel.email)
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def assign_athlete(
+        self,
+        user_id: uuid.UUID,
+        athlete_id: uuid.UUID,
+        *,
+        created_by: uuid.UUID | None,
+    ) -> None:
+        """Make ``user_id`` the coach of ``athlete_id``; a no-op if already linked."""
+        if await self._session.get(UserAthleteModel, (user_id, athlete_id)) is not None:
+            return
+        self._session.add(
+            UserAthleteModel(
+                user_id=user_id, athlete_id=athlete_id, created_by=created_by
+            )
+        )
+        await self._session.flush()
+
+    async def revoke_athlete(self, user_id: uuid.UUID, athlete_id: uuid.UUID) -> bool:
+        """Remove the coaching link; returns whether one existed."""
+        link = await self._session.get(UserAthleteModel, (user_id, athlete_id))
+        if link is None:
+            return False
+        await self._session.delete(link)
+        await self._session.flush()
+        return True

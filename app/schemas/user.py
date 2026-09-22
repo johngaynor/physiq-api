@@ -46,3 +46,21 @@ class UserDetail(msgspec.Struct):
             roles=[RoleRead.from_model(r) for r in roles],
             scopes=sorted({s.scope_str for r in roles for s in r.scopes}),
         )
+
+
+class AthleteSummary(msgspec.Struct):
+    """An athlete as listed under the coach who manages them."""
+
+    id: uuid.UUID
+    first_name: str | None
+    last_name: str | None
+    email: str | None
+
+    @classmethod
+    def from_model(cls, user: UserModel) -> "AthleteSummary":
+        return cls(
+            id=user.id,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+        )

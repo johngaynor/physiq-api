@@ -9,6 +9,7 @@ from advanced_alchemy.extensions.litestar import (
 )
 from app.auth.authentication import AuthenticationMiddleware
 from app.fixtures.seed import DEV_ADMIN_API_KEY, DEV_COACH_API_KEY
+from app.models.user_athlete import UserAthleteModel
 from app.models.user_role import UserRoleModel
 from app.routers.admin import AdminRouter
 from litestar import Litestar
@@ -20,6 +21,7 @@ ADMIN = {"Authorization": f"Bearer {DEV_ADMIN_API_KEY}"}
 COACH = {"Authorization": f"Bearer {DEV_COACH_API_KEY}"}
 
 ATHLETE_USER_ID = "00000000-0000-4000-8000-000000000101"
+COACH_USER_ID = "00000000-0000-4000-8000-000000000102"
 ADMIN_USER_ID = "00000000-0000-4000-8000-000000000103"
 COACH_ROLE_ID = "00000000-0000-4000-8000-000000000002"
 
@@ -320,5 +322,111 @@ async def test_revoke_role_removes_it(client: AsyncTestClient[Litestar]) -> None
 async def test_revoke_unassigned_role_is_404(client: AsyncTestClient[Litestar]) -> None:
     r = await client.delete(
         f"/admin/users/{ATHLETE_USER_ID}/roles/{COACH_ROLE_ID}", headers=ADMIN
+    )
+    assert r.status_code == 404
+
+
+# --- athlete assignment ----------------------------------------------------
+
+
+async def test_list_athletes_is_empty_by_default(
+    client: AsyncTestClient[Litestar],
+) -> None:
+    r = await client.get(f"/admin/users/{COACH_USER_ID}/athletes", headers=ADMIN)
+
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+async def test_list_athletes_of_unknown_user_is_404(
+    client: AsyncTestClient[Litestar],
+) -> None:
+    r = await client.get(f"/admin/users/{uuid.uuid4()}/athletes", headers=ADMIN)
+    assert r.status_code == 404
+
+
+async def test_non_admin_cannot_manage_athletes(
+    client: AsyncTestClient[Litestar],
+) -> None:
+    url = f"/admin/users/{COACH_USER_ID}/athletes/{ATHLETE_USER_ID}"
+    assert (await client.put(url, headers=COACH)).status_code == 403
+    assert (await client.delete(url, headers=COACH)).status_code == 403
+
+
+async def test_assign_athlete_records_calling_admin(
+    client: AsyncTestClient[Litestar], db_session: AsyncSession
+) -> None:
+    r = await client.put(
+        f"/admin/users/{COACH_USER_ID}/athletes/{ATHLETE_USER_ID}", headers=ADMIN
+    )
+
+    assert r.status_code == 204
+    listed = (
+        await client.get(f"/admin/users/{COACH_USER_ID}/athletes", headers=ADMIN)
+    ).json()
+    assert listed == [
+        {
+            "id": ATHLETE_USER_ID,
+            "first_name": "Dev",
+            "last_name": "Athlete",
+            "email": "athlete@physiq.dev",
+        }
+    ]
+
+    link = await db_session.get(
+        UserAthleteModel, (uuid.UUID(COACH_USER_ID), uuid.UUID(ATHLETE_USER_ID))
+    )
+    assert link is not None
+    assert link.created_by == uuid.UUID(ADMIN_USER_ID)
+
+
+async def test_assign_athlete_twice_is_204(client: AsyncTestClient[Litestar]) -> None:
+    url = f"/admin/users/{COACH_USER_ID}/athletes/{ATHLETE_USER_ID}"
+    await client.put(url, headers=ADMIN)
+
+    assert (await client.put(url, headers=ADMIN)).status_code == 204
+
+
+async def test_assign_athlete_to_self_is_400(client: AsyncTestClient[Litestar]) -> None:
+    r = await client.put(
+        f"/admin/users/{COACH_USER_ID}/athletes/{COACH_USER_ID}", headers=ADMIN
+    )
+    assert r.status_code == 400
+
+
+async def test_assign_athlete_to_unknown_user_is_404(
+    client: AsyncTestClient[Litestar],
+) -> None:
+    r = await client.put(
+        f"/admin/users/{uuid.uuid4()}/athletes/{ATHLETE_USER_ID}", headers=ADMIN
+    )
+    assert r.status_code == 404
+
+
+async def test_assign_unknown_athlete_is_404(client: AsyncTestClient[Litestar]) -> None:
+    r = await client.put(
+        f"/admin/users/{COACH_USER_ID}/athletes/{uuid.uuid4()}", headers=ADMIN
+    )
+    assert r.status_code == 404
+
+
+async def test_revoke_athlete_removes_link(client: AsyncTestClient[Litestar]) -> None:
+    url = f"/admin/users/{COACH_USER_ID}/athletes/{ATHLETE_USER_ID}"
+    await client.put(url, headers=ADMIN)
+
+    r = await client.delete(url, headers=ADMIN)
+
+    assert r.status_code == 204
+    listed = (
+        await client.get(f"/admin/users/{COACH_USER_ID}/athletes", headers=ADMIN)
+    ).json()
+    assert listed == []
+
+
+async def test_revoke_unlinked_athlete_is_404(
+    client: AsyncTestClient[Litestar],
+) -> None:
+    r = await client.delete(
+        f"/admin/users/{COACH_USER_ID}/athletes/{ATHLETE_USER_ID}", headers=ADMIN
     )
     assert r.status_code == 404
