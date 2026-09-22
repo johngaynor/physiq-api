@@ -1,21 +1,33 @@
 import asyncio
 from collections.abc import AsyncIterator, Iterator
+from contextlib import asynccontextmanager
 
 import app.models  # noqa: F401 - register every model with the metadata registry
 import pytest
 from advanced_alchemy.base import metadata_registry
+from advanced_alchemy.extensions.litestar import (
+    AsyncSessionConfig,
+    SQLAlchemyAsyncConfig,
+    SQLAlchemyPlugin,
+)
+from app.auth.authentication import AuthenticationMiddleware
 from app.fixtures.seed import seed_db
+from app.models.check_in import CheckInModel
 from app.models.role import RoleModel
 from app.models.role_scope import RoleScopeModel
 from app.models.user import UserModel
 from app.models.user_athlete import UserAthleteModel
 from app.models.user_role import UserRoleModel
+from litestar import Litestar, Router
+from litestar.middleware.base import DefineMiddleware
+from litestar.testing import AsyncTestClient
 from sqlalchemy import NullPool, delete
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
 # Child tables first so foreign keys never block a delete.
 _TABLES_IN_DELETE_ORDER = (
+    CheckInModel,
     UserAthleteModel,
     UserRoleModel,
     RoleScopeModel,
@@ -74,3 +86,27 @@ async def db_session(db_url: str) -> AsyncIterator[AsyncSession]:
         await _reset(engine)
     finally:
         await engine.dispose()
+
+
+@asynccontextmanager
+async def authenticated_client(
+    db_url: str, *routers: Router
+) -> AsyncIterator[AsyncTestClient[Litestar]]:
+    """An app serving ``routers`` behind API-key auth against the test database.
+
+    Callers should also depend on ``db_session`` so the database is reset to
+    the seed baseline after the test.
+    """
+    config = SQLAlchemyAsyncConfig(
+        connection_string=db_url,
+        before_send_handler="autocommit",
+        session_config=AsyncSessionConfig(expire_on_commit=False),
+        create_all=False,
+    )
+    app = Litestar(
+        route_handlers=list(routers),
+        plugins=[SQLAlchemyPlugin(config=config)],
+        middleware=[DefineMiddleware(AuthenticationMiddleware, alchemy_config=config)],
+    )
+    async with AsyncTestClient(app=app) as client:
+        yield client

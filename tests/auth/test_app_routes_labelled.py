@@ -53,6 +53,16 @@ def test_every_route_resolves_to_its_expected_scope() -> None:
             "DELETE",
         ): RouteScope("admin", "users", "delete"),
         ("/athlete/check-ins", "GET"): RouteScope("athlete", "check-ins", "read"),
+        ("/athlete/check-ins", "POST"): RouteScope("athlete", "check-ins", "write"),
+        ("/athlete/check-ins/{check_in_id:uuid}", "GET"): RouteScope(
+            "athlete", "check-ins", "read"
+        ),
+        ("/athlete/check-ins/{check_in_id:uuid}", "PATCH"): RouteScope(
+            "athlete", "check-ins", "write"
+        ),
+        ("/athlete/check-ins/{check_in_id:uuid}", "DELETE"): RouteScope(
+            "athlete", "check-ins", "delete"
+        ),
         ("/coach/check-ins", "GET"): RouteScope("coach", "check-ins", "read"),
     }
 

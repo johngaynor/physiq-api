@@ -2,20 +2,14 @@ import uuid
 from collections.abc import AsyncIterator
 
 import pytest
-from advanced_alchemy.extensions.litestar import (
-    AsyncSessionConfig,
-    SQLAlchemyAsyncConfig,
-    SQLAlchemyPlugin,
-)
-from app.auth.authentication import AuthenticationMiddleware
 from app.fixtures.seed import DEV_ADMIN_API_KEY, DEV_COACH_API_KEY
 from app.models.user_athlete import UserAthleteModel
 from app.models.user_role import UserRoleModel
 from app.routers.admin import AdminRouter
 from litestar import Litestar
-from litestar.middleware.base import DefineMiddleware
 from litestar.testing import AsyncTestClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.conftest import authenticated_client
 
 ADMIN = {"Authorization": f"Bearer {DEV_ADMIN_API_KEY}"}
 COACH = {"Authorization": f"Bearer {DEV_COACH_API_KEY}"}
@@ -30,23 +24,8 @@ COACH_ROLE_ID = "00000000-0000-4000-8000-000000000002"
 async def client(
     db_url: str, db_session: AsyncSession
 ) -> AsyncIterator[AsyncTestClient[Litestar]]:
-    """A client against the seeded test database.
-
-    Depends on ``db_session`` so every test starts from the seed baseline and
-    the database is reset afterwards.
-    """
-    config = SQLAlchemyAsyncConfig(
-        connection_string=db_url,
-        before_send_handler="autocommit",
-        session_config=AsyncSessionConfig(expire_on_commit=False),
-        create_all=False,
-    )
-    app = Litestar(
-        route_handlers=[AdminRouter],
-        plugins=[SQLAlchemyPlugin(config=config)],
-        middleware=[DefineMiddleware(AuthenticationMiddleware, alchemy_config=config)],
-    )
-    async with AsyncTestClient(app=app) as c:
+    """A client against the seeded test database, reset afterwards."""
+    async with authenticated_client(db_url, AdminRouter) as c:
         yield c
 
 
