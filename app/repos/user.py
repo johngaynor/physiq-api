@@ -24,6 +24,26 @@ class UserRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
+    async def assign_role(
+        self, user_id: uuid.UUID, role_id: uuid.UUID, *, granted_by: uuid.UUID | None
+    ) -> None:
+        """Give ``user_id`` the role; a no-op if they already hold it."""
+        if await self._session.get(UserRoleModel, (user_id, role_id)) is not None:
+            return
+        self._session.add(
+            UserRoleModel(user_id=user_id, role_id=role_id, granted_by=granted_by)
+        )
+        await self._session.flush()
+
+    async def revoke_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> bool:
+        """Remove the assignment; returns whether one existed."""
+        assignment = await self._session.get(UserRoleModel, (user_id, role_id))
+        if assignment is None:
+            return False
+        await self._session.delete(assignment)
+        await self._session.flush()
+        return True
+
     async def get_by_id(self, user_id: uuid.UUID) -> UserModel | None:
         return await self._session.get(UserModel, user_id)
 

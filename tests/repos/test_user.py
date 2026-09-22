@@ -121,3 +121,54 @@ async def test_list_roles_empty_for_user_without_roles(
     await db_session.commit()
 
     assert await UserRepository(db_session).list_roles(user.id) == []
+
+
+async def test_assign_role_records_granting_admin(db_session: AsyncSession) -> None:
+    user = await _seed_user_with_scopes(db_session, api_key_hash="h6", scopes=[])
+    admin = await _seed_user_with_scopes(db_session, api_key_hash="h7", scopes=[])
+    role = RoleModel(name=f"role-{uuid.uuid4()}")
+    db_session.add(role)
+    await db_session.flush()
+    repo = UserRepository(db_session)
+
+    await repo.assign_role(user.id, role.id, granted_by=admin.id)
+    await db_session.commit()
+
+    assignment = await db_session.get(UserRoleModel, (user.id, role.id))
+    assert assignment is not None
+    assert assignment.granted_by == admin.id
+    assert role.id in {r.id for r in await repo.list_roles(user.id)}
+
+
+async def test_assign_role_is_idempotent(db_session: AsyncSession) -> None:
+    user = await _seed_user_with_scopes(db_session, api_key_hash="h8", scopes=[])
+    role = RoleModel(name=f"role-{uuid.uuid4()}")
+    db_session.add(role)
+    await db_session.flush()
+    repo = UserRepository(db_session)
+
+    await repo.assign_role(user.id, role.id, granted_by=None)
+    await repo.assign_role(user.id, role.id, granted_by=None)
+    await db_session.commit()
+
+    assert len(await repo.list_roles(user.id)) == 2  # seeded role + new one
+
+
+async def test_revoke_role_removes_assignment(db_session: AsyncSession) -> None:
+    user = await _seed_user_with_scopes(db_session, api_key_hash="h9", scopes=[])
+    repo = UserRepository(db_session)
+    [role] = await repo.list_roles(user.id)
+
+    revoked = await repo.revoke_role(user.id, role.id)
+    await db_session.commit()
+
+    assert revoked is True
+    assert await repo.list_roles(user.id) == []
+
+
+async def test_revoke_role_returns_false_when_not_assigned(
+    db_session: AsyncSession,
+) -> None:
+    user = await _seed_user_with_scopes(db_session, api_key_hash="h10", scopes=[])
+
+    assert await UserRepository(db_session).revoke_role(user.id, uuid.uuid4()) is False

@@ -22,3 +22,17 @@ class RoleRead(msgspec.Struct):
             version=role.version,
             scopes=sorted(s.scope_str for s in role.scopes),
         )
+
+
+class RoleCreate(msgspec.Struct):
+    """Request body for creating a role."""
+
+    name: str
+    scopes: list[str]
+    description: str | None = None
+
+
+class RoleScopesReplace(msgspec.Struct):
+    """Request body for replacing a role's scopes wholesale."""
+
+    scopes: list[str]
