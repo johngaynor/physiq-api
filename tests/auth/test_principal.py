@@ -9,7 +9,7 @@ def _principal(*raw: str) -> Principal:
 
 
 def test_covers_when_any_scope_matches() -> None:
-    p = _principal("coach:metrics:*:read", "athlete:check-ins:self:read")
+    p = _principal("coach:check-ins:*:read", "athlete:check-ins:self:read")
     assert p.covers(RouteScope("athlete", "check-ins", "read"))
 
 

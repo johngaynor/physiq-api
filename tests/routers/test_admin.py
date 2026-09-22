@@ -202,16 +202,16 @@ async def test_replace_scopes_overwrites_and_bumps_version(
     r = await client.put(
         f"/admin/roles/{COACH_ROLE_ID}/scopes",
         headers=ADMIN,
-        json={"scopes": ["coach:metrics:*:read", "coach:check-ins:*:read"]},
+        json={"scopes": ["coach:check-ins:*:write", "coach:check-ins:*:read"]},
     )
 
     assert r.status_code == 200
-    assert r.json()["scopes"] == ["coach:check-ins:*:read", "coach:metrics:*:read"]
+    assert r.json()["scopes"] == ["coach:check-ins:*:read", "coach:check-ins:*:write"]
     assert r.json()["version"] == 2
 
     fetched = (await client.get(f"/admin/roles/{COACH_ROLE_ID}", headers=ADMIN)).json()
     assert fetched["version"] == 2
-    assert fetched["scopes"] == ["coach:check-ins:*:read", "coach:metrics:*:read"]
+    assert fetched["scopes"] == ["coach:check-ins:*:read", "coach:check-ins:*:write"]
 
 
 async def test_replace_scopes_with_invalid_scope_is_400(

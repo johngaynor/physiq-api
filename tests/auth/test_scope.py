@@ -48,7 +48,7 @@ class TestScopeCovers:
         "raw",
         [
             "athlete:check-ins:*:read",  # wrong role
-            "coach:metrics:*:read",  # wrong resource
+            "coach:users:*:read",  # wrong resource
             "coach:check-ins:*:write",  # wrong method
         ],
     )

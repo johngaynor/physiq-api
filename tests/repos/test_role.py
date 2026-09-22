@@ -18,13 +18,13 @@ async def _seed_role(session: AsyncSession, *, scopes: list[str]) -> RoleModel:
 async def test_get_all_returns_every_role_with_scopes(
     db_session: AsyncSession,
 ) -> None:
-    seeded = await _seed_role(db_session, scopes=["coach:metrics:*:read"])
+    seeded = await _seed_role(db_session, scopes=["coach:check-ins:*:read"])
 
     roles = await RoleRepository(db_session).get_all()
 
     by_id = {r.id: r for r in roles}
     assert seeded.id in by_id
-    assert [s.scope_str for s in by_id[seeded.id].scopes] == ["coach:metrics:*:read"]
+    assert [s.scope_str for s in by_id[seeded.id].scopes] == ["coach:check-ins:*:read"]
     assert {"athlete", "coach", "admin"} <= {r.name for r in roles}
 
 
@@ -36,7 +36,8 @@ async def test_get_all_is_ordered_by_name(db_session: AsyncSession) -> None:
 
 async def test_get_by_id_returns_role_with_scopes(db_session: AsyncSession) -> None:
     seeded = await _seed_role(
-        db_session, scopes=["athlete:check-ins:self:read", "athlete:metrics:self:read"]
+        db_session,
+        scopes=["athlete:check-ins:self:read", "athlete:check-ins:self:write"],
     )
 
     found = await RoleRepository(db_session).get_by_id(seeded.id)
@@ -45,7 +46,7 @@ async def test_get_by_id_returns_role_with_scopes(db_session: AsyncSession) -> N
     assert found.name == seeded.name
     assert sorted(s.scope_str for s in found.scopes) == [
         "athlete:check-ins:self:read",
-        "athlete:metrics:self:read",
+        "athlete:check-ins:self:write",
     ]
 
 
@@ -57,14 +58,14 @@ async def test_create_persists_role_with_scopes(db_session: AsyncSession) -> Non
     name = f"role-{uuid.uuid4()}"
 
     created = await RoleRepository(db_session).create(
-        name=name, description="desc", scopes=["coach:metrics:*:read"]
+        name=name, description="desc", scopes=["coach:check-ins:*:read"]
     )
     await db_session.commit()
 
     found = await RoleRepository(db_session).get_by_id(created.id)
     assert found is not None
     assert (found.name, found.description, found.version) == (name, "desc", 1)
-    assert [s.scope_str for s in found.scopes] == ["coach:metrics:*:read"]
+    assert [s.scope_str for s in found.scopes] == ["coach:check-ins:*:read"]
 
 
 async def test_get_by_name_returns_matching_role(db_session: AsyncSession) -> None:
